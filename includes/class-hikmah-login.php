@@ -192,14 +192,15 @@ final class Hikmah_Login {
 
         /**
          * ================================================
-         * AJAX modules
+         * AJAX & SHORTCODE modules (Phase 04)
          * ================================================
          */
-        if ( wp_doing_ajax() ) {
-            // Future AJAX modules:
-            // $this->modules['ajax_login']    = Ajax\Ajax_Login::get_instance();
-            // $this->modules['ajax_register'] = Ajax\Ajax_Register::get_instance();
-        }
+
+        // AJAX handlers (always load — they self-register)
+        $this->modules['ajax_login'] = Ajax\Ajax_Login::get_instance();
+
+        // Shortcodes (always load — they self-register)
+        $this->modules['shortcode_login'] = Shortcodes\Login_Shortcode::get_instance();
 
         /**
          * ================================================

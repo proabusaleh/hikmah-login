@@ -1,0 +1,511 @@
+/**
+ * Hikmah Login — Frontend Styles
+ *
+ * @package Hikmah_Login
+ * @version 1.0.0
+ */
+
+/* =============================================
+   CSS VARIABLES
+   ============================================= */
+:root {
+    --hikmah-primary: #4f46e5;
+    --hikmah-primary-hover: #4338ca;
+    --hikmah-primary-light: #eef2ff;
+    --hikmah-success: #10b981;
+    --hikmah-success-bg: #ecfdf5;
+    --hikmah-error: #ef4444;
+    --hikmah-error-bg: #fef2f2;
+    --hikmah-warning: #f59e0b;
+    --hikmah-warning-bg: #fffbeb;
+    --hikmah-info: #3b82f6;
+    --hikmah-info-bg: #eff6ff;
+    --hikmah-text: #1f2937;
+    --hikmah-text-light: #6b7280;
+    --hikmah-border: #d1d5db;
+    --hikmah-border-focus: #4f46e5;
+    --hikmah-bg: #f9fafb;
+    --hikmah-white: #ffffff;
+    --hikmah-radius: 8px;
+    --hikmah-radius-sm: 6px;
+    --hikmah-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --hikmah-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --hikmah-transition: 0.2s ease;
+    --hikmah-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+/* =============================================
+   WRAPPER
+   ============================================= */
+.hikmah-login-wrapper {
+    max-width: 420px;
+    margin: 40px auto;
+    padding: 32px;
+    background: var(--hikmah-white);
+    border-radius: 12px;
+    box-shadow: var(--hikmah-shadow-lg);
+    font-family: var(--hikmah-font);
+    color: var(--hikmah-text);
+    line-height: 1.6;
+}
+
+/* =============================================
+   HEADER
+   ============================================= */
+.hikmah-form-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.hikmah-form-logo {
+    margin-bottom: 16px;
+}
+
+.hikmah-form-logo img {
+    max-width: 120px;
+    max-height: 60px;
+    object-fit: contain;
+}
+
+.hikmah-form-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--hikmah-text);
+}
+
+.hikmah-form-subtitle {
+    font-size: 14px;
+    color: var(--hikmah-text-light);
+    margin: 0;
+}
+
+/* =============================================
+   NOTICES
+   ============================================= */
+.hikmah-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: var(--hikmah-radius-sm);
+    margin-bottom: 16px;
+    font-size: 14px;
+    position: relative;
+}
+
+.hikmah-notice p {
+    margin: 0;
+    flex: 1;
+}
+
+.hikmah-notice-icon {
+    flex-shrink: 0;
+    font-size: 16px;
+}
+
+.hikmah-notice-success {
+    background: var(--hikmah-success-bg);
+    border: 1px solid var(--hikmah-success);
+    color: #065f46;
+}
+
+.hikmah-notice-error {
+    background: var(--hikmah-error-bg);
+    border: 1px solid var(--hikmah-error);
+    color: #991b1b;
+}
+
+.hikmah-notice-warning {
+    background: var(--hikmah-warning-bg);
+    border: 1px solid var(--hikmah-warning);
+    color: #92400e;
+}
+
+.hikmah-notice-info {
+    background: var(--hikmah-info-bg);
+    border: 1px solid var(--hikmah-info);
+    color: #1e40af;
+}
+
+.hikmah-notice-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.6;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.hikmah-notice-close:hover {
+    opacity: 1;
+}
+
+.hikmah-hidden {
+    display: none !important;
+}
+
+/* =============================================
+   SOCIAL LOGIN
+   ============================================= */
+.hikmah-social-login {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.hikmah-social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 16px;
+    border: 1px solid var(--hikmah-border);
+    border-radius: var(--hikmah-radius-sm);
+    background: var(--hikmah-white);
+    color: var(--hikmah-text);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all var(--hikmah-transition);
+}
+
+.hikmah-social-btn:hover {
+    background: var(--hikmah-bg);
+    border-color: #9ca3af;
+    box-shadow: var(--hikmah-shadow);
+}
+
+.hikmah-social-btn svg {
+    flex-shrink: 0;
+}
+
+.hikmah-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 20px 0;
+    color: var(--hikmah-text-light);
+    font-size: 13px;
+}
+
+.hikmah-divider::before,
+.hikmah-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--hikmah-border);
+}
+
+/* =============================================
+   FORM FIELDS
+   ============================================= */
+.hikmah-field {
+    margin-bottom: 18px;
+}
+
+.hikmah-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--hikmah-text);
+}
+
+.hikmah-required {
+    color: var(--hikmah-error);
+    margin-left: 2px;
+}
+
+.hikmah-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.hikmah-input-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--hikmah-text-light);
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.hikmah-input {
+    width: 100%;
+    padding: 10px 12px 10px 40px;
+    border: 1px solid var(--hikmah-border);
+    border-radius: var(--hikmah-radius-sm);
+    font-size: 14px;
+    font-family: var(--hikmah-font);
+    color: var(--hikmah-text);
+    background: var(--hikmah-white);
+    transition: all var(--hikmah-transition);
+    outline: none;
+    box-sizing: border-box;
+}
+
+.hikmah-input::placeholder {
+    color: #9ca3af;
+}
+
+.hikmah-input:focus {
+    border-color: var(--hikmah-border-focus);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.hikmah-input.hikmah-input-error {
+    border-color: var(--hikmah-error);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.hikmah-input.hikmah-input-success {
+    border-color: var(--hikmah-success);
+}
+
+.hikmah-field-error {
+    display: block;
+    font-size: 12px;
+    color: var(--hikmah-error);
+    margin-top: 4px;
+    min-height: 16px;
+}
+
+/* Password Toggle */
+.hikmah-toggle-password {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--hikmah-text-light);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    transition: color var(--hikmah-transition);
+}
+
+.hikmah-toggle-password:hover {
+    color: var(--hikmah-text);
+}
+
+/* =============================================
+   CHECKBOX
+   ============================================= */
+.hikmah-field-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.hikmah-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--hikmah-text);
+    user-select: none;
+}
+
+.hikmah-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--hikmah-primary);
+    cursor: pointer;
+}
+
+.hikmah-forgot-link {
+    font-size: 13px;
+    color: var(--hikmah-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.hikmah-forgot-link:hover {
+    color: var(--hikmah-primary-hover);
+    text-decoration: underline;
+}
+
+/* =============================================
+   BUTTONS
+   ============================================= */
+.hikmah-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border: none;
+    border-radius: var(--hikmah-radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    font-family: var(--hikmah-font);
+    cursor: pointer;
+    transition: all var(--hikmah-transition);
+    text-decoration: none;
+    line-height: 1.4;
+}
+
+.hikmah-btn-primary {
+    background: var(--hikmah-primary);
+    color: var(--hikmah-white);
+}
+
+.hikmah-btn-primary:hover {
+    background: var(--hikmah-primary-hover);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.hikmah-btn-primary:active {
+    transform: translateY(1px);
+}
+
+.hikmah-btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.hikmah-btn-full {
+    width: 100%;
+}
+
+/* Spinner */
+.hikmah-spinner {
+    animation: hikmah-spin 1s linear infinite;
+}
+
+@keyframes hikmah-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* =============================================
+   2FA
+   ============================================= */
+.hikmah-2fa-container {
+    background: var(--hikmah-primary-light);
+    padding: 20px;
+    border-radius: var(--hikmah-radius);
+    margin-bottom: 16px;
+}
+
+.hikmah-2fa-header h3 {
+    margin: 0 0 4px;
+    font-size: 16px;
+}
+
+.hikmah-2fa-header p {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: var(--hikmah-text-light);
+}
+
+.hikmah-2fa-input {
+    text-align: center;
+    font-size: 24px;
+    letter-spacing: 8px;
+    font-weight: 700;
+    padding-left: 12px !important;
+}
+
+/* =============================================
+   FOOTER
+   ============================================= */
+.hikmah-form-footer {
+    text-align: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--hikmah-border);
+}
+
+.hikmah-register-link {
+    font-size: 14px;
+    color: var(--hikmah-text-light);
+    margin: 0;
+}
+
+.hikmah-register-link a {
+    color: var(--hikmah-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.hikmah-register-link a:hover {
+    text-decoration: underline;
+}
+
+/* =============================================
+   LOGGED IN NOTICE
+   ============================================= */
+.hikmah-logged-in-notice {
+    max-width: 420px;
+    margin: 40px auto;
+}
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+@media (max-width: 480px) {
+    .hikmah-login-wrapper {
+        margin: 20px 16px;
+        padding: 24px 20px;
+    }
+
+    .hikmah-form-title {
+        font-size: 20px;
+    }
+
+    .hikmah-field-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* =============================================
+   DARK MODE SUPPORT
+   ============================================= */
+@media (prefers-color-scheme: dark) {
+    .hikmah-login-wrapper.dark-mode {
+        --hikmah-text: #f3f4f6;
+        --hikmah-text-light: #9ca3af;
+        --hikmah-border: #374151;
+        --hikmah-bg: #1f2937;
+        --hikmah-white: #111827;
+    }
+}
+
+/* =============================================
+   ANIMATIONS
+   ============================================= */
+@keyframes hikmah-shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+    20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.hikmah-shake {
+    animation: hikmah-shake 0.5s ease;
+}
+
+@keyframes hikmah-fade-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.hikmah-fade-in {
+    animation: hikmah-fade-in 0.3s ease;
+}

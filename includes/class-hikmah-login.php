@@ -180,28 +180,26 @@ final class Hikmah_Login {
 
         /**
          * ================================================
-         * FRONTEND-ONLY modules
-         * ================================================
-         */
-        if ( ! is_admin() ) {
-            // Future frontend modules:
-            // $this->modules['login']          = Auth\Login::get_instance();
-            // $this->modules['register']       = Auth\Register::get_instance();
-            // $this->modules['forgot_pass']    = Auth\Forgot_Password::get_instance();
-        }
-
-        /**
-         * ================================================
-         * AJAX & SHORTCODE modules (Phase 04)
+         * PHASE 04: LOGIN
          * ================================================
          */
 
         // AJAX handlers (always load — they self-register)
         $this->modules['ajax_login'] = Ajax\Ajax_Login::get_instance();
-        $this->modules['ajax_register'] = Ajax\Ajax_Register::get_instance();
 
         // Shortcodes (always load — they self-register)
         $this->modules['shortcode_login'] = Shortcodes\Login_Shortcode::get_instance();
+
+        /**
+         * ================================================
+         * PHASE 05: REGISTRATION
+         * ================================================
+         */
+
+        // AJAX handler (always load — self-registers)
+        $this->modules['ajax_register'] = Ajax\Ajax_Register::get_instance();
+
+        // Shortcode (always load — self-registers)
         $this->modules['shortcode_register'] = Shortcodes\Register_Shortcode::get_instance();
 
         /**

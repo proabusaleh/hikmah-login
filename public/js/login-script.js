@@ -37,6 +37,9 @@
             this.bind2FAForm();
             this.bindFormValidation();
             this.initCaptcha();
+            this.bindRegisterForm();
+            this.bindPasswordStrength();
+            this.bindAvailabilityCheck();
         },
 
         /**
@@ -505,6 +508,418 @@
                 $(this).closest('.hikmah-notice').fadeOut(200, function() {
                     $(this).remove();
                 });
+            });
+        },
+
+        /**
+         * =============================================
+         * REGISTRATION FORM
+         * =============================================
+         */
+
+        /**
+         * Bind registration form submission
+         */
+        bindRegisterForm() {
+            const self = this;
+
+            $(document).on('submit', '.hikmah-register-form', function(e) {
+                e.preventDefault();
+
+                const $form = $(this);
+                const $submit = $form.find('.hikmah-btn-primary');
+                const $btnText = $submit.find('.hikmah-btn-text');
+                const $btnLoading = $submit.find('.hikmah-btn-loading');
+
+                // Client-side validation
+                if (!self.validateRegisterForm($form)) {
+                    return;
+                }
+
+                // Show loading state
+                $submit.prop('disabled', true);
+                $btnText.addClass('hikmah-hidden');
+                $btnLoading.removeClass('hikmah-hidden');
+                self.hideNotices($form);
+
+                // Prepare form data
+                const formData = new FormData($form[0]);
+
+                // Handle reCAPTCHA v3
+                if (self.config.captchaEnabled && self.config.captchaType === 'recaptcha_v3') {
+                    if (typeof grecaptcha !== 'undefined') {
+                        grecaptcha.ready(function() {
+                            grecaptcha.execute(self.config.recaptchaKey, { action: 'register' })
+                                .then(function(token) {
+                                    formData.set('captcha_response', token);
+                                    self.submitRegister($form, formData, $submit, $btnText, $btnLoading);
+                                });
+                        });
+                        return;
+                    }
+                }
+
+                self.submitRegister($form, formData, $submit, $btnText, $btnLoading);
+            });
+        },
+
+        /**
+         * Submit registration via AJAX
+         */
+        submitRegister($form, formData, $submit, $btnText, $btnLoading) {
+            const self = this;
+
+            $.ajax({
+                url: self.config.ajaxUrl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success(response) {
+                    if (response.success) {
+                        // Registration successful
+                        self.showNotice($form, 'success', response.message);
+
+                        // Clear form
+                        $form.find('input:not([type="hidden"])').val('');
+
+                        if (response.data && response.data.redirect) {
+                            setTimeout(function() {
+                                window.location.href = response.data.redirect;
+                            }, 1500);
+                        } else {
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 1500);
+                        }
+                    } else {
+                        // Registration failed
+                        self.showNotice($form, 'error', response.message);
+                        self.shakeForm($form);
+                        self.resetButton($submit, $btnText, $btnLoading);
+
+                        // Show field-specific errors
+                        if (response.data && response.data.errors) {
+                            self.showFieldErrors($form, response.data.errors);
+                        } else if (response.data && response.data.field) {
+                            self.highlightField($form, response.data.field);
+                        }
+                    }
+                },
+                error(xhr) {
+                    let message = self.config.i18n.error;
+
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    } else if (xhr.status === 0) {
+                        message = self.config.i18n.networkError;
+                    }
+
+                    self.showNotice($form, 'error', message);
+                    self.shakeForm($form);
+                    self.resetButton($submit, $btnText, $btnLoading);
+                }
+            });
+        },
+
+        /**
+         * Validate entire registration form
+         */
+        validateRegisterForm($form) {
+            let isValid = true;
+            const self = this;
+
+            // Validate each field
+            const fields = ['first_name', 'last_name', 'username', 'email', 'password', 'confirm_password'];
+
+            fields.forEach(function(name) {
+                const $input = $form.find('[name="' + name + '"]');
+                if ($input.length && !self.validateRegisterField($input)) {
+                    isValid = false;
+                }
+            });
+
+            // Validate terms checkbox
+            const $terms = $form.find('input[name="terms"]');
+            if ($terms.length && !$terms.prop('checked')) {
+                $terms.closest('.hikmah-field')
+                       .find('.hikmah-field-error')
+                       .text(self.config.i18n.required);
+                isValid = false;
+            }
+
+            if (!isValid) {
+                $form.find('.hikmah-input-error').first().focus();
+                this.shakeForm($form);
+            }
+
+            return isValid;
+        },
+
+        /**
+         * Validate a single registration field
+         */
+        validateRegisterField($input) {
+            const name = $input.attr('name');
+            const value = $input.val().trim();
+            const $error = $input.closest('.hikmah-field').find('.hikmah-field-error');
+            let isValid = true;
+            let message = '';
+
+            switch (name) {
+                case 'first_name':
+                case 'last_name':
+                    if (!value) {
+                        isValid = false;
+                        message = this.config.i18n.required;
+                    }
+                    break;
+
+                case 'username':
+                    if (!value) {
+                        isValid = false;
+                        message = this.config.i18n.required;
+                    } else if (value.length < 3) {
+                        isValid = false;
+                        message = this.config.i18n.usernameTooShort || 'Username must be at least 3 characters.';
+                    }
+                    break;
+
+                case 'email':
+                    if (!value) {
+                        isValid = false;
+                        message = this.config.i18n.required;
+                    } else if (!this.isValidEmail(value)) {
+                        isValid = false;
+                        message = this.config.i18n.invalidEmail;
+                    }
+                    break;
+
+                case 'password':
+                    if (!value) {
+                        isValid = false;
+                        message = this.config.i18n.required;
+                    } else if (value.length < 8) {
+                        isValid = false;
+                        message = this.config.i18n.passwordTooShort || 'Password must be at least 8 characters.';
+                    }
+                    break;
+
+                case 'confirm_password':
+                    const $password = $input.closest('.hikmah-login-form').find('input[name="password"]');
+                    if (!value) {
+                        isValid = false;
+                        message = this.config.i18n.required;
+                    } else if (value !== $password.val()) {
+                        isValid = false;
+                        message = this.config.i18n.passwordMismatch;
+                    }
+                    break;
+            }
+
+            if (!isValid) {
+                $input.addClass('hikmah-input-error');
+                $error.text(message);
+            } else {
+                $input.removeClass('hikmah-input-error');
+                $error.text('');
+            }
+
+            return isValid;
+        },
+
+        /**
+         * Show field-specific errors returned from server
+         */
+        showFieldErrors($form, errors) {
+            const self = this;
+
+            // Clear existing errors
+            $form.find('.hikmah-field-error').text('');
+            $form.find('.hikmah-input').removeClass('hikmah-input-error');
+
+            // Display errors
+            Object.keys(errors).forEach(function(field) {
+                const message = errors[field];
+                const $error = $form.find('.hikmah-field-error[data-field="' + field + '"]');
+
+                if ($error.length) {
+                    $error.text(message);
+                    const $input = $form.find('[name="' + field + '"]');
+                    if ($input.length) {
+                        $input.addClass('hikmah-input-error');
+                    }
+                }
+            });
+        },
+
+        /**
+         * =============================================
+         * PASSWORD STRENGTH METER
+         * =============================================
+         */
+
+        bindPasswordStrength() {
+            const self = this;
+
+            $(document).on('input', '.hikmah-register-form input[name="password"]', function() {
+                const $input = $(this);
+                const value = $input.val();
+                const $container = $input.closest('.hikmah-field');
+                const $strength = $container.find('.hikmah-password-strength');
+                const $bar = $strength.find('.hikmah-strength-fill');
+                const $text = $strength.find('.hikmah-strength-text');
+
+                // Show meter only when typing
+                if (value.length > 0) {
+                    $strength.addClass('hikmah-visible');
+                } else {
+                    $strength.removeClass('hikmah-visible');
+                }
+
+                // Calculate strength
+                const score = self.calculatePasswordStrength(value);
+                $bar.attr('data-strength', score);
+
+                const labels = {
+                    0: '',
+                    1: this.config.i18n.strengthWeak || 'Weak',
+                    2: this.config.i18n.strengthFair || 'Fair',
+                    3: this.config.i18n.strengthGood || 'Good',
+                    4: this.config.i18n.strengthStrong || 'Strong'
+                };
+
+                $text.attr('data-strength', score).text(labels[score]);
+
+                // Update requirements checklist
+                self.updateRequirements($container, value);
+            });
+        },
+
+        /**
+         * Calculate password strength score (0-4)
+         */
+        calculatePasswordStrength(password) {
+            let score = 0;
+
+            if (!password) return 0;
+
+            // Length
+            if (password.length >= 8) score++;
+
+            // Uppercase + lowercase
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+
+            // Numbers
+            if (/\d/.test(password)) score++;
+
+            // Special characters
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+
+            return score;
+        },
+
+        /**
+         * Update password requirements checklist
+         */
+        updateRequirements($container, password) {
+            const $list = $container.find('.hikmah-password-requirements');
+            if (!$list.length) return;
+
+            $list.find('li').each(function() {
+                const $item = $(this);
+                const rule = $item.data('rule');
+                let passed = false;
+
+                switch (rule) {
+                    case 'length':
+                        passed = password.length >= 8;
+                        break;
+                    case 'upper':
+                        passed = /[A-Z]/.test(password);
+                        break;
+                    case 'lower':
+                        passed = /[a-z]/.test(password);
+                        break;
+                    case 'number':
+                        passed = /\d/.test(password);
+                        break;
+                    case 'special':
+                        passed = /[^A-Za-z0-9]/.test(password);
+                        break;
+                }
+
+                $item.removeClass('hikmah-req-pending hikmah-req-pass hikmah-req-fail');
+                $item.addClass(passed ? 'hikmah-req-pass' : 'hikmah-req-fail');
+            });
+        },
+
+        /**
+         * =============================================
+         * AVAILABILITY CHECKS (Username / Email)
+         * =============================================
+         */
+
+        bindAvailabilityCheck() {
+            const self = this;
+            const selector = '.hikmah-register-form input[name="username"][data-validate="username"], .hikmah-register-form input[name="email"][data-validate="email"]';
+
+            // Debounced on blur
+            $(document).on('blur', selector, function() {
+                const $input = $(this);
+                const name = $input.attr('name');
+                const value = $input.val().trim();
+
+                if (!value) return;
+                if (name === 'username' && value.length < 3) return;
+                if (name === 'email' && !self.isValidEmail(value)) return;
+
+                self.checkAvailability(name, value, $input);
+
+                // Clear hint when user edits
+                $(this).one('input', function() {
+                    $input.closest('.hikmah-field')
+                           .find('.hikmah-field-hint')
+                           .removeAttr('data-availability')
+                           .text('');
+                });
+            });
+        },
+
+        /**
+         * AJAX check if username/email is available
+         */
+        checkAvailability(type, value, $input) {
+            const self = this;
+            const action = type === 'username' ? 'hikmah_check_username' : 'hikmah_check_email';
+            const $hint = $input.closest('.hikmah-field').find('.hikmah-field-hint');
+
+            // Show checking state
+            $hint.attr('data-availability', 'checking')
+                 .text(self.config.i18n.checkingAvailability || 'Checking availability...');
+
+            $.post(self.config.ajaxUrl, {
+                action: action,
+                hikmah_register_nonce: self.config.registerNonce,
+                username: type === 'username' ? value : '',
+                email: type === 'email' ? value : ''
+            }, function(response) {
+                if (response.success && response.data && response.data.available) {
+                    $hint.attr('data-availability', 'available')
+                         .text(response.message)
+                         .css('color', 'var(--hikmah-success)');
+                    $input.removeClass('hikmah-input-error');
+                } else {
+                    $hint.attr('data-availability', 'taken')
+                         .text(response.message || self.config.i18n.notAvailable || 'Not available')
+                         .css('color', 'var(--hikmah-error)');
+                    $input.addClass('hikmah-input-error');
+                }
+            }).fail(function() {
+                $hint.attr('data-availability', 'error')
+                     .text('')
+                     .css('color', '');
             });
         }
     };

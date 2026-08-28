@@ -1,0 +1,295 @@
+<?php
+/**
+ * Main Plugin Class
+ *
+ * The core class that orchestrates all plugin functionality.
+ * Acts as the central hub connecting all modules.
+ *
+ * @package Hikmah_Login
+ * @since   1.0.0
+ */
+
+namespace Hikmah_Login;
+
+use Hikmah_Login\Traits\Singleton;
+use Hikmah_Login\Traits\Hooks;
+
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+final class Hikmah_Login {
+
+    use Singleton;
+    use Hooks;
+
+    /**
+     * Plugin version.
+     *
+     * @var string
+     */
+    public $version;
+
+    /**
+     * Loaded modules registry.
+     *
+     * @var array
+     */
+    private $modules = [];
+
+    /**
+     * Constructor.
+     * Private — use get_instance() instead.
+     */
+    private function __construct() {
+        $this->version = HIKMAH_LOGIN_VERSION;
+        $this->init();
+    }
+
+    /**
+     * Initialize the plugin.
+     */
+    private function init() {
+        // Step 1: Load dependencies
+        $this->load_dependencies();
+
+        // Step 2: Set locale for translations
+        $this->set_locale();
+
+        // Step 3: Register hooks
+        $this->register_hooks();
+
+        // Step 4: Initialize modules based on context
+        $this->init_modules();
+
+        /**
+         * Fires after Hikmah Login is fully initialized.
+         *
+         * @since 1.0.0
+         * @param Hikmah_Login $this Plugin instance.
+         */
+        do_action( 'hikmah_login_loaded', $this );
+    }
+
+    /**
+     * Load required dependency files.
+     *
+     * Files that aren't autoloaded (functions files, etc.)
+     */
+    private function load_dependencies() {
+        // Helper functions file (if needed)
+        // require_once HIKMAH_LOGIN_DIR . 'includes/functions.php';
+    }
+
+    /**
+     * Set plugin locale for translations.
+     */
+    private function set_locale() {
+        add_action( 'init', function() {
+            load_plugin_textdomain(
+                'hikmah-login',
+                false,
+                dirname( HIKMAH_LOGIN_BASENAME ) . '/languages/'
+            );
+        });
+    }
+
+    /**
+     * Register core WordPress hooks.
+     */
+    private function register_hooks() {
+
+        // Activation redirect (one-time)
+        $this->add_action( 'admin_init', 'maybe_redirect_after_activation' );
+
+        // Plugin action links (Settings link on plugins page)
+        add_filter(
+            'plugin_action_links_' . HIKMAH_LOGIN_BASENAME,
+            [ $this, 'add_plugin_action_links' ]
+        );
+
+        // Plugin row meta (extra links)
+        add_filter(
+            'plugin_row_meta',
+            [ $this, 'add_plugin_row_meta' ],
+            10,
+            2
+        );
+
+        // Register custom cron schedules if needed
+        $this->add_filter( 'cron_schedules', 'add_custom_cron_schedules' );
+    }
+
+    /**
+     * Initialize modules based on context (admin vs frontend).
+     */
+    private function init_modules() {
+
+        /**
+         * ================================================
+         * Modules loaded on EVERY request (admin + front)
+         * ================================================
+         */
+
+        // These will be activated in Phase 3+
+        // $this->modules['assets']   = new Assets();
+        // $this->modules['security'] = Security\Login_Attempts::get_instance();
+
+        /**
+         * ================================================
+         * ADMIN-ONLY modules
+         * ================================================
+         */
+        if ( is_admin() ) {
+            // $this->modules['admin_menu']     = Admin\Admin_Menu::get_instance();
+            // $this->modules['admin_settings'] = Admin\Admin_Settings::get_instance();
+            // $this->modules['login_logs']     = Admin\Login_Logs::get_instance();
+        }
+
+        /**
+         * ================================================
+         * FRONTEND-ONLY modules
+         * ================================================
+         */
+        if ( ! is_admin() ) {
+            // $this->modules['login']          = Auth\Login::get_instance();
+            // $this->modules['register']       = Auth\Register::get_instance();
+            // $this->modules['forgot_pass']    = Auth\Forgot_Password::get_instance();
+            // $this->modules['shortcodes']     = Shortcodes\Login_Shortcode::get_instance();
+        }
+
+        /**
+         * ================================================
+         * AJAX modules (loaded on AJAX requests)
+         * ================================================
+         */
+        if ( wp_doing_ajax() ) {
+            // $this->modules['ajax_login']    = Ajax\Ajax_Login::get_instance();
+            // $this->modules['ajax_register'] = Ajax\Ajax_Register::get_instance();
+        }
+
+        /**
+         * ================================================
+         * REST API modules
+         * ================================================
+         */
+        // $this->modules['rest_auth'] = RestApi\Auth_Controller::get_instance();
+    }
+
+    /**
+     * Redirect to settings page after activation.
+     */
+    public function maybe_redirect_after_activation() {
+        if ( get_transient( 'hikmah_login_activation_redirect' ) ) {
+            delete_transient( 'hikmah_login_activation_redirect' );
+
+            // Don't redirect on multisite bulk activation
+            if ( is_network_admin() || isset( $_GET['activate-multi'] ) ) {
+                return;
+            }
+
+            // Redirect to plugin settings page
+            wp_safe_redirect(
+                admin_url( 'admin.php?page=hikmah-login&welcome=1' )
+            );
+            exit;
+        }
+    }
+
+    /**
+     * Add Settings link on Plugins page.
+     *
+     * @param array $links Existing links.
+     * @return array Modified links.
+     */
+    public function add_plugin_action_links( $links ) {
+
+        $plugin_links = [
+            '<a href="' . admin_url( 'admin.php?page=hikmah-login' ) . '">'
+                . esc_html__( 'Settings', 'hikmah-login' )
+                . '</a>',
+            '<a href="' . admin_url( 'admin.php?page=hikmah-login-logs' ) . '">'
+                . esc_html__( 'Login Logs', 'hikmah-login' )
+                . '</a>',
+        ];
+
+        return array_merge( $plugin_links, $links );
+    }
+
+    /**
+     * Add extra meta links on Plugins page.
+     *
+     * @param array  $links   Existing meta links.
+     * @param string $file    Plugin file.
+     * @return array Modified meta links.
+     */
+    public function add_plugin_row_meta( $links, $file ) {
+
+        if ( HIKMAH_LOGIN_BASENAME !== $file ) {
+            return $links;
+        }
+
+        $extra_links = [
+            '<a href="https://example.com/docs/hikmah-login" target="_blank">'
+                . esc_html__( 'Documentation', 'hikmah-login' )
+                . '</a>',
+            '<a href="https://example.com/support" target="_blank">'
+                . esc_html__( 'Support', 'hikmah-login' )
+                . '</a>',
+        ];
+
+        return array_merge( $links, $extra_links );
+    }
+
+    /**
+     * Add custom cron schedules.
+     *
+     * @param array $schedules Existing schedules.
+     * @return array Modified schedules.
+     */
+    public function add_custom_cron_schedules( $schedules ) {
+
+        // Every 5 minutes
+        $schedules['hikmah_every_5_minutes'] = [
+            'interval' => 300,
+            'display'  => esc_html__( 'Every 5 Minutes', 'hikmah-login' ),
+        ];
+
+        // Twice daily
+        $schedules['hikmah_twice_daily'] = [
+            'interval' => 43200,
+            'display'  => esc_html__( 'Twice Daily', 'hikmah-login' ),
+        ];
+
+        return $schedules;
+    }
+
+    /**
+     * Get a loaded module instance.
+     *
+     * @param string $module Module key.
+     * @return object|null Module instance or null.
+     */
+    public function get_module( $module ) {
+        return $this->modules[ $module ] ?? null;
+    }
+
+    /**
+     * Check if a module is loaded.
+     *
+     * @param string $module Module key.
+     * @return bool
+     */
+    public function has_module( $module ) {
+        return isset( $this->modules[ $module ] );
+    }
+
+    /**
+     * Get plugin version.
+     *
+     * @return string
+     */
+    public function get_version() {
+        return $this->version;
+    }
+}

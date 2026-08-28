@@ -97,10 +97,59 @@ if ( version_compare( get_bloginfo( 'version' ), HIKMAH_LOGIN_MIN_WP, '<' ) ) {
 /**
  * =============================================
  * BOOTSTRAP THE PLUGIN
- * (Autoloader & Main class load হবে পরের steps এ)
  * =============================================
  */
 
-// Placeholder — will be filled in Step 3, 4, 5
-// require_once HIKMAH_LOGIN_DIR . 'includes/class-autoloader.php';
-// require_once HIKMAH_LOGIN_DIR . 'includes/class-hikmah-login.php';
+// Load Autoloader
+require_once HIKMAH_LOGIN_DIR . 'includes/class-autoloader.php';
+
+// Register Autoloader
+$hikmah_autoloader = new Hikmah_Login_Autoloader();
+$hikmah_autoloader->register();
+
+/**
+ * Register Activation Hook
+ */
+register_activation_hook( __FILE__, function( $network_wide ) {
+    Hikmah_Login\Activator::activate( $network_wide );
+});
+
+/**
+ * Register Deactivation Hook
+ */
+register_deactivation_hook( __FILE__, function( $network_wide ) {
+    Hikmah_Login\Deactivator::deactivate( $network_wide );
+});
+
+/**
+ * Handle new blog creation on multisite
+ * (Auto-activate when new site is created)
+ */
+add_action( 'wp_insert_site', function( $new_site ) {
+    if ( is_plugin_active_for_network( HIKMAH_LOGIN_BASENAME ) ) {
+        switch_to_blog( $new_site->blog_id );
+        Hikmah_Login\Activator::activate( false );
+        restore_current_blog();
+    }
+});
+
+/**
+ * Initialize the plugin.
+ *
+ * We use 'plugins_loaded' to ensure all plugins are loaded
+ * before we initialize (important for compatibility).
+ */
+add_action( 'plugins_loaded', function() {
+    Hikmah_Login\Hikmah_Login::get_instance();
+});
+
+/**
+ * Global accessor function.
+ *
+ * Usage: hikmah_login()->get_module('login')
+ *
+ * @return Hikmah_Login\Hikmah_Login Plugin instance.
+ */
+function hikmah_login() {
+    return Hikmah_Login\Hikmah_Login::get_instance();
+}

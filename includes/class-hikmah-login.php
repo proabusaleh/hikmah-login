@@ -122,18 +122,43 @@ final class Hikmah_Login {
 
     /**
      * Initialize modules based on context (admin vs frontend).
+     *
+     * Updated in Phase 03 to include core auth modules.
      */
     private function init_modules() {
 
         /**
          * ================================================
-         * Modules loaded on EVERY request (admin + front)
+         * CORE MODULES (Loaded on EVERY request)
          * ================================================
          */
 
-        // These will be activated in Phase 3+
-        // $this->modules['assets']   = new Assets();
-        // $this->modules['security'] = Security\Login_Attempts::get_instance();
+        // Assets (CSS/JS)
+        $this->modules['assets'] = Assets::get_instance();
+
+        // i18n (Translations)
+        $this->modules['i18n'] = I18n::get_instance();
+
+        // Core Hooks & Filters
+        $this->modules['core_hooks'] = Auth\Core_Hooks::get_instance();
+
+        // Auth Manager (Login/Logout logic)
+        $this->modules['auth'] = Auth\Auth_Manager::get_instance();
+
+        // Login Override (wp-login.php redirect)
+        $this->modules['login_override'] = Auth\Login_Override::get_instance();
+
+        // Session Manager
+        $this->modules['sessions'] = Auth\Session_Manager::get_instance();
+
+        // Error Handler
+        Helpers\Error_Handler::init();
+
+        // Run migrations if needed
+        $migration = new Database\Migration();
+        if ( $migration->needs_migration() ) {
+            $migration->run();
+        }
 
         /**
          * ================================================
@@ -141,6 +166,13 @@ final class Hikmah_Login {
          * ================================================
          */
         if ( is_admin() ) {
+            // Admin Notices
+            $this->modules['admin_notices'] = Admin\Admin_Notices::get_instance();
+
+            // Show SSL warning
+            $this->modules['admin_notices']->maybe_show_ssl_warning();
+
+            // Future admin modules:
             // $this->modules['admin_menu']     = Admin\Admin_Menu::get_instance();
             // $this->modules['admin_settings'] = Admin\Admin_Settings::get_instance();
             // $this->modules['login_logs']     = Admin\Login_Logs::get_instance();
@@ -152,18 +184,19 @@ final class Hikmah_Login {
          * ================================================
          */
         if ( ! is_admin() ) {
+            // Future frontend modules:
             // $this->modules['login']          = Auth\Login::get_instance();
             // $this->modules['register']       = Auth\Register::get_instance();
             // $this->modules['forgot_pass']    = Auth\Forgot_Password::get_instance();
-            // $this->modules['shortcodes']     = Shortcodes\Login_Shortcode::get_instance();
         }
 
         /**
          * ================================================
-         * AJAX modules (loaded on AJAX requests)
+         * AJAX modules
          * ================================================
          */
         if ( wp_doing_ajax() ) {
+            // Future AJAX modules:
             // $this->modules['ajax_login']    = Ajax\Ajax_Login::get_instance();
             // $this->modules['ajax_register'] = Ajax\Ajax_Register::get_instance();
         }
@@ -173,6 +206,7 @@ final class Hikmah_Login {
          * REST API modules
          * ================================================
          */
+        // Future REST modules:
         // $this->modules['rest_auth'] = RestApi\Auth_Controller::get_instance();
     }
 

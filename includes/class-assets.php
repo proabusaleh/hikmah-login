@@ -14,6 +14,7 @@ namespace Hikmah_Login;
 use Hikmah_Login\Traits\Singleton;
 use Hikmah_Login\Traits\Hooks;
 use Hikmah_Login\Helpers\Helper;
+use Hikmah_Login\Admin\Admin_UI_Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -47,6 +48,12 @@ class Assets {
         // Login page assets (wp-login.php override)
         $this->add_action( 'login_enqueue_scripts', 'enqueue_login_page_assets' );
 
+        // Custom UI settings page assets
+        $this->add_action( 'admin_enqueue_scripts', 'enqueue_ui_settings_assets' );
+
+        // Frontend body class for page-level styling
+        $this->add_filter( 'body_class', 'add_login_page_body_class' );
+
         // Inline custom CSS
         $this->add_action( 'wp_head', 'output_custom_css', 100 );
     }
@@ -75,17 +82,6 @@ class Assets {
             HIKMAH_LOGIN_VERSION,
             'all'
         );
-
-        // RTL support
-        if ( is_rtl() ) {
-            wp_enqueue_style(
-                'hikmah-login-rtl',
-                HIKMAH_LOGIN_URL . 'public/css/login-style-rtl.css',
-                [ 'hikmah-login-style' ],
-                HIKMAH_LOGIN_VERSION,
-                'all'
-            );
-        }
 
         // AJAX Manager (load before login-script)
         wp_enqueue_script(
@@ -268,6 +264,27 @@ class Assets {
             return;
         }
 
+        // 2FA setup wizard assets (own profile page).
+        if ( 'profile' === $screen->id && Helper::is_feature_enabled( '2fa_enabled' ) ) {
+            wp_enqueue_script(
+                'hikmah-ajax',
+                HIKMAH_LOGIN_URL . 'public/js/hikmah-ajax.js',
+                [ 'jquery', 'heartbeat' ],
+                HIKMAH_LOGIN_VERSION,
+                true
+            );
+
+            wp_enqueue_script(
+                'hikmah-login-script',
+                HIKMAH_LOGIN_URL . 'public/js/login-script.js',
+                [ 'jquery', 'hikmah-ajax' ],
+                HIKMAH_LOGIN_VERSION,
+                true
+            );
+
+            wp_localize_script( 'hikmah-login-script', 'hikmahLogin', $this->get_localized_data() );
+        }
+
         $admin_nonce = wp_create_nonce( 'hikmah_admin_nonce' );
 
         $inline = "
@@ -375,6 +392,7 @@ class Assets {
             'hikmah-login_page_hikmah-login-logs',
             'hikmah-login_page_hikmah-login-security',
             'hikmah-login_page_hikmah-login-social',
+            'hikmah-login_page_hikmah-login-ui',
         ];
 
         if ( in_array( $hook_suffix, $hikmah_pages, true ) ) {
@@ -421,7 +439,7 @@ class Assets {
      */
 
     /**
-     * Output custom CSS from admin settings.
+     * Output the dynamic UI stylesheet (Phase 12).
      */
     public function output_custom_css() {
 
@@ -429,29 +447,62 @@ class Assets {
             return;
         }
 
-        $custom_css = get_option( 'hikmah_custom_css', '' );
-        $bg_color   = get_option( 'hikmah_login_bg_color', '#f1f1f1' );
-        $form_width = get_option( 'hikmah_login_form_width', '400' );
-
-        $css = '';
-
-        // Background color
-        if ( $bg_color && $bg_color !== '#f1f1f1' ) {
-            $css .= ".hikmah-login-wrapper { background-color: {$bg_color}; }\n";
-        }
-
-        // Form width
-        if ( $form_width && $form_width !== '400' ) {
-            $css .= ".hikmah-login-form { max-width: {$form_width}px; }\n";
-        }
-
-        // Custom CSS from settings
-        if ( ! empty( $custom_css ) ) {
-            $css .= wp_strip_all_tags( $custom_css ) . "\n";
-        }
+        $ui     = Admin_UI_Settings::get_instance();
+        $css    = $ui->generate_dynamic_css();
 
         if ( ! empty( $css ) ) {
-            echo "<style id=\"hikmah-login-custom-css\">\n" . $css . "</style>\n";
+            echo "<style id=\"hikmah-login-dynamic-css\">\n" . $css . "</style>\n";
         }
+
+        $settings = $ui->get_settings();
+
+        // Force the selected theme mode when it is locked (light/dark).
+        if ( 'auto' !== $settings['theme_mode'] ) {
+            echo "<script id=\"hikmah-login-force-mode\">\n";
+            echo "try{document.documentElement.classList.add('hikmah-" . esc_js( $settings['theme_mode'] ) . "-mode');}catch(e){}\n";
+            echo "</script>\n";
+        }
+
+        // Theme toggle button (rendered by the form shortcode) needs this script.
+        echo "<script id=\"hikmah-login-theme-toggle\">\n";
+        echo "(function(){var b=document.querySelector('.hikmah-theme-toggle');if(!b)return;function getStored(){try{var v=localStorage.getItem('hikmah-theme');if(v==='dark'||v==='light'){return v;}}catch(e){}return null;}function render(){var d=document.documentElement;var dark=d.classList.contains('hikmah-dark-mode');b.setAttribute('aria-pressed',dark?'true':'false');var i=b.querySelector('.hikmah-toggle-icon-dark');var l=b.querySelector('.hikmah-toggle-icon-light');if(i)i.style.display=dark?'none':'inline';if(l)l.style.display=dark?'inline':'none';}function apply(v){var d=document.documentElement,dark=(v==='dark')?true:false;if(dark){d.classList.add('hikmah-dark-mode');}else{d.classList.remove('hikmah-dark-mode');}render();}var s=getStored();if(s){apply(s);}b.addEventListener('click',function(){var d=document.documentElement,on=!d.classList.contains('hikmah-dark-mode');if(on){d.classList.add('hikmah-dark-mode');}else{d.classList.remove('hikmah-dark-mode');}try{localStorage.setItem('hikmah-theme',on?'dark':'light');}catch(e){}render();});})();\n";
+        echo "</script>\n";
+    }
+
+    /**
+     * Enqueue assets only on the Custom UI settings page.
+     *
+     * @param string $hook_suffix Current admin page hook.
+     */
+    public function enqueue_ui_settings_assets( $hook_suffix ) {
+
+        if ( 'hikmah-login_page_hikmah-login-ui' !== $hook_suffix ) {
+            return;
+        }
+
+        wp_enqueue_media();
+
+        wp_enqueue_script(
+            'hikmah-ui-customizer',
+            HIKMAH_LOGIN_URL . 'admin/js/admin-ui-customizer.js',
+            [ 'jquery' ],
+            HIKMAH_LOGIN_VERSION,
+            true
+        );
+    }
+
+    /**
+     * Add a body class so page-level styling can target Hikmah pages.
+     *
+     * @param array $classes Body classes.
+     * @return array
+     */
+    public function add_login_page_body_class( $classes ) {
+
+        if ( $this->should_load_frontend_assets() ) {
+            $classes[] = 'hikmah-login-page';
+        }
+
+        return $classes;
     }
 }

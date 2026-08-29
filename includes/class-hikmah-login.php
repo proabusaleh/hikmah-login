@@ -175,6 +175,15 @@ final class Hikmah_Login {
             // Admin menu (Dashboard / Settings / Security)
             $this->modules['admin_menu'] = Admin\Admin_Menu::get_instance();
 
+            /**
+             * PHASE 12: CUSTOM UI
+             *
+             * Admin settings screen for branding/layout/theme. The dynamic
+             * frontend stylesheet is generated lazily from the Assets class
+             * (output_custom_css) so it also works on non-admin requests.
+             */
+            $this->modules['admin_ui_settings'] = Admin\Admin_UI_Settings::get_instance();
+
             // Future admin modules:
             // $this->modules['admin_settings'] = Admin\Admin_Settings::get_instance();
             // $this->modules['login_logs']     = Admin\Login_Logs::get_instance();
@@ -229,6 +238,20 @@ final class Hikmah_Login {
         // Shortcode (always load — self-registers)
         $this->modules['shortcode_verify'] = Shortcodes\Verification_Shortcode::get_instance();
 
+        // 2FA setup shortcode (always load — self-registers)
+        $this->modules['shortcode_2fa'] = Shortcodes\Two_FA_Shortcode::get_instance();
+
+        /**
+         * ================================================
+         * PHASE 10: TWO-FACTOR AUTHENTICATION
+         * ================================================
+         */
+
+        // Two-Factor Authentication (email OTP + TOTP + backup codes).
+        // Instantiated before Ajax_Controller so its AJAX actions are
+        // registered when the controller fires hikmah_ajax_register_actions.
+        $this->modules['security_two_factor'] = Security\Two_Factor::get_instance();
+
         /**
          * ================================================
          * PHASE 08: AJAX ARCHITECTURE
@@ -256,6 +279,26 @@ final class Hikmah_Login {
 
         // Audit Log
         $this->modules['security_log'] = Security\Security_Log::get_instance();
+
+        /**
+         * ================================================
+         * PHASE 12: CUSTOM UI
+         * ================================================
+         *
+         * Registered inside the admin-only block above.
+         */
+
+        /**
+         * ================================================
+         * PHASE 13: USER DASHBOARD
+         * ================================================
+         */
+
+        // User dashboard (profile/security/sessions/history/delete + AJAX).
+        $this->modules['user_dashboard'] = Auth\User_Dashboard::get_instance();
+
+        // [hikmah_dashboard] shortcode.
+        $this->modules['shortcode_dashboard'] = Shortcodes\Dashboard_Shortcode::get_instance();
 
         /**
          * ================================================

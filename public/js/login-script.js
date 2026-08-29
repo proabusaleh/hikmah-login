@@ -38,10 +38,12 @@
             this.bindPasswordToggle();
             this.bindNoticeDismiss();
             this.bind2FAForm();
+            this.bind2FASetup();          // 🆕
             this.bindFormValidation();
             this.bindPasswordStrength();
             this.bindAvailabilityCheck();
             this.bindVerificationResend();
+            this.bindDashboard();
             this.initCaptcha();
         },
 
@@ -1071,6 +1073,199 @@
 
         /**
          * =============================================
+         * 2FA SETUP WIZARD
+         * =============================================
+         */
+
+        /**
+         * Show a notice inside the 2FA setup wizard.
+         */
+        show2FANotice($root, type, message, autoHide) {
+            const $notice = $root.find('#hikmah-2fa-notice');
+            $notice.removeAttr('class')
+                .addClass('hikmah-notice hikmah-notice-' + type + ' hikmah-fade-in')
+                .html('<p>' + message + '</p>');
+
+            if (autoHide !== false && type === 'success') {
+                setTimeout(function () {
+                    $notice.addClass('hikmah-hidden');
+                }, 5000);
+            }
+        },
+
+        /**
+         * Display backup codes in the setup wizard.
+         */
+        showBackupCodes(codes) {
+            const $root = $('#hikmah-2fa-setup');
+            if (!$root.length) { return; }
+
+            const $list = $root.find('#hikmah-2fa-backup-codes');
+            $list.empty();
+
+            (codes || []).forEach(function (code) {
+                $list.append('<li>' + code + '</li>');
+            });
+
+            $root.find('#hikmah-2fa-backup-container').removeClass('hikmah-hidden');
+        },
+
+        /**
+         * Bind 2FA setup wizard interactions.
+         */
+        bind2FASetup() {
+            const self = this;
+            const $root = $('#hikmah-2fa-setup');
+
+            if (!$root.length) {
+                return;
+            }
+
+            const getMethod = function () {
+                return $root.find('input[name="hikmah-2fa-method"]:checked').val() || 'email';
+            };
+
+            const validCode = function (value) {
+                return /^\d{6}$/.test(value);
+            };
+
+            // Start setup
+            $root.on('click', '#hikmah-2fa-start-setup', function () {
+                const method = getMethod();
+
+                HikmahAjax.setup2FA({ method: method }, {
+                    showLoading: true,
+                    loadingElement: '#hikmah-2fa-start-setup'
+                }).then(function (response) {
+                    if (method === 'authenticator') {
+                        $root.find('#hikmah-2fa-qr').attr('src', response.data.qr_code_url);
+                        $root.find('#hikmah-2fa-secret').text(response.data.secret);
+                        $root.find('#hikmah-2fa-auth-step').removeClass('hikmah-hidden');
+                    } else {
+                        $root.find('#hikmah-2fa-email-step').removeClass('hikmah-hidden');
+                    }
+                    $root.find('#hikmah-2fa-email-code, #hikmah-2fa-auth-code').val('');
+                }).catch(function (response) {
+                    self.show2FANotice($root, 'error', (response && response.message) || self.config.i18n.networkError);
+                });
+            });
+
+            // Verify email code
+            $root.on('click', '#hikmah-2fa-email-verify', function () {
+                const code = $root.find('#hikmah-2fa-email-code').val().trim();
+
+                if (!validCode(code)) {
+                    self.show2FANotice($root, 'error', self.config.i18n.invalidCode || 'Please enter a valid 6-digit code.');
+                    return;
+                }
+
+                HikmahAjax.verify2FASetup({ method: 'email', code: code }).then(function (response) {
+                    self.showBackupCodes(response.data.backup_codes);
+                    self.show2FANotice($root, 'success', response.message);
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1200);
+                }).catch(function (response) {
+                    self.show2FANotice($root, 'error', (response && response.message) || self.config.i18n.networkError);
+                });
+            });
+
+            // Resend email code
+            $root.on('click', '#hikmah-2fa-email-resend', function () {
+                HikmahAjax.sendLoginOTP({
+                    user_id: parseInt(self.config.userId, 10) || 0
+                }).then(function (response) {
+                    self.show2FANotice($root, 'success', response.message);
+                }).catch(function (response) {
+                    self.show2FANotice($root, 'error', (response && response.message) || self.config.i18n.networkError);
+                });
+            });
+
+            // Verify authenticator code
+            $root.on('click', '#hikmah-2fa-auth-verify', function () {
+                const code = $root.find('#hikmah-2fa-auth-code').val().trim();
+
+                if (!validCode(code)) {
+                    self.show2FANotice($root, 'error', self.config.i18n.invalidCode || 'Please enter a valid 6-digit code.');
+                    return;
+                }
+
+                HikmahAjax.verify2FASetup({ method: 'authenticator', code: code }).then(function (response) {
+                    self.showBackupCodes(response.data.backup_codes);
+                    self.show2FANotice($root, 'success', response.message);
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1200);
+                }).catch(function (response) {
+                    self.show2FANotice($root, 'error', (response && response.message) || self.config.i18n.networkError);
+                });
+            });
+
+            // Generate new backup codes
+            $root.on('click', '#hikmah-2fa-new-backup', function () {
+                HikmahAjax.generateBackupCodes().then(function (response) {
+                    self.showBackupCodes(response.data.backup_codes);
+                    self.show2FANotice($root, 'success', response.message);
+                }).catch(function (response) {
+                    self.show2FANotice($root, 'error', (response && response.message) || self.config.i18n.networkError);
+                });
+            });
+
+            // Copy backup codes
+            $root.on('click', '#hikmah-2fa-copy-backup', function () {
+                const text = $root.find('#hikmah-2fa-backup-codes li').map(function () {
+                    return $(this).text();
+                }).get().join('\n');
+
+                if (!text) { return; }
+
+                const fallback = function () {
+                    const $ta = $('<textarea>').val(text).appendTo($root).select();
+                    try {
+                        document.execCommand('copy');
+                        self.show2FANotice($root, 'success', self.config.i18n.copied || 'Backup codes copied.');
+                    } catch (e) {
+                        self.show2FANotice($root, 'warning', 'Could not copy. Select and copy manually.');
+                    }
+                    $ta.remove();
+                };
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(function () {
+                        self.show2FANotice($root, 'success', self.config.i18n.copied || 'Backup codes copied.');
+                    }, fallback).catch(fallback);
+                } else {
+                    fallback();
+                }
+            });
+
+            // Toggle disable panel
+            $root.on('click', '#hikmah-2fa-disable', function () {
+                $root.find('#hikmah-2fa-disable-panel').toggleClass('hikmah-hidden');
+            });
+
+            // Confirm disable
+            $root.on('click', '#hikmah-2fa-disable-confirm', function () {
+                const password = $root.find('#hikmah-2fa-disable-password').val();
+
+                if (!password) {
+                    self.show2FANotice($root, 'error', 'Enter your password to confirm disabling two-factor authentication.');
+                    return;
+                }
+
+                HikmahAjax.disable2FA({ password: password }).then(function (response) {
+                    self.show2FANotice($root, 'success', response.message);
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1000);
+                }).catch(function (response) {
+                    self.show2FANotice($root, 'error', (response && response.message) || self.config.i18n.networkError);
+                });
+            });
+        },
+
+        /**
+         * =============================================
          * VERIFICATION RESEND
          * =============================================
          */
@@ -1127,6 +1322,161 @@
                         alert((response && response.message) || self.config.i18n.networkError);
                         $btn.prop('disabled', false).text('Resend Verification Email');
                     });
+            });
+        },
+
+        /**
+         * =============================================
+         * DASHBOARD HANDLERS
+         * =============================================
+         */
+
+        bindDashboard() {
+            const self = this;
+
+            // Profile update
+            $(document).on('submit', '#hikmah-profile-form', function(e) {
+                e.preventDefault();
+                const $form = $(this);
+                const $status = $form.find('.hikmah-dash-status');
+                const $btn = $form.find('.hikmah-btn-primary');
+
+                $btn.prop('disabled', true).text('Saving...');
+                $status.text('');
+
+                $.post(self.config.ajaxUrl, $form.serialize() + '&action=hikmah_update_profile', function(response) {
+                    $status.text(response.success ? '✅ ' + response.message : '❌ ' + response.message)
+                           .css('color', response.success ? '#10b981' : '#ef4444');
+                }).always(function() {
+                    $btn.prop('disabled', false).text('Save Profile');
+                });
+            });
+
+            // Password change
+            $(document).on('submit', '#hikmah-password-form', function(e) {
+                e.preventDefault();
+                const $form = $(this);
+                const $status = $form.find('.hikmah-dash-status');
+                const $btn = $form.find('.hikmah-btn-primary');
+
+                const newPass = $form.find('[name="new_password"]').val();
+                const confirm = $form.find('[name="confirm_password"]').val();
+
+                if (newPass !== confirm) {
+                    $status.text('❌ Passwords do not match.').css('color', '#ef4444');
+                    return;
+                }
+
+                $btn.prop('disabled', true).text('Updating...');
+
+                $.post(self.config.ajaxUrl, $form.serialize() + '&action=hikmah_change_password', function(response) {
+                    $status.text(response.success ? '✅ ' + response.message : '❌ ' + response.message)
+                           .css('color', response.success ? '#10b981' : '#ef4444');
+                    if (response.success) $form[0].reset();
+                }).always(function() {
+                    $btn.prop('disabled', false).text('Update Password');
+                });
+            });
+
+            // Avatar upload
+            $(document).on('change', '#hikmah-avatar-upload', function() {
+                const file = this.files[0];
+                if (!file) return;
+
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Image must be less than 2MB.');
+                    return;
+                }
+
+                const $nonce = $('.hikmah-avatar-section [name="hikmah_profile_nonce"]').first();
+
+                const formData = new FormData();
+                formData.append('action', 'hikmah_upload_avatar');
+                formData.append('hikmah_profile_nonce', $nonce.length ? $nonce.val() : '');
+                formData.append('avatar', file);
+
+                $.ajax({
+                    url: self.config.ajaxUrl,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success(response) {
+                        if (response.success) {
+                            $('.hikmah-avatar-img').attr('src', response.data.avatar_url);
+                        } else {
+                            alert(response.message);
+                        }
+                    }
+                });
+            });
+
+            // Delete session
+            $(document).on('click', '.hikmah-session-revoke', function() {
+                if (!confirm('Revoke this session?')) return;
+                const $btn = $(this);
+                const token = $btn.data('token');
+
+                $.post(self.config.ajaxUrl, {
+                    action: 'hikmah_delete_session',
+                    nonce: self.config.nonce,
+                    token: token
+                }, function(response) {
+                    if (response.success) {
+                        $btn.closest('.hikmah-session-card').fadeOut(300, function() { $(this).remove(); });
+                    } else {
+                        alert(response.message);
+                    }
+                });
+            });
+
+            // Delete all sessions
+            $(document).on('click', '#hikmah-logout-all', function() {
+                if (!confirm('Log out from all other devices?')) return;
+
+                $.post(self.config.ajaxUrl, {
+                    action: 'hikmah_delete_all_sessions',
+                    nonce: self.config.nonce
+                }, function(response) {
+                    alert(response.message);
+                    if (response.success) location.reload();
+                });
+            });
+
+            // Unlink social
+            $(document).on('click', '.hikmah-unlink-social', function() {
+                if (!confirm('Disconnect this social account?')) return;
+                const provider = $(this).data('provider');
+
+                $.post(self.config.ajaxUrl, {
+                    action: 'hikmah_unlink_social',
+                    nonce: self.config.nonce,
+                    provider: provider
+                }, function(response) {
+                    alert(response.message);
+                    if (response.success) location.reload();
+                });
+            });
+
+            // Account deletion confirmation
+            $(document).on('input', '#hikmah-delete-form [name="confirm_username"]', function() {
+                const expected = $(this).data('expected');
+                const typed = $(this).val();
+                $('#hikmah-delete-btn').prop('disabled', typed !== expected);
+            });
+
+            $(document).on('submit', '#hikmah-delete-form', function(e) {
+                e.preventDefault();
+                if (!confirm('⚠️ This is PERMANENT. Are you absolutely sure?')) return;
+                if (!confirm('Last chance. Type OK to proceed.')) return;
+
+                $.post(self.config.ajaxUrl, $(this).serialize() + '&action=hikmah_delete_account', function(response) {
+                    if (response.success) {
+                        window.location.href = response.data.redirect || '/';
+                    } else {
+                        alert(response.message);
+                    }
+                });
             });
         }
     };

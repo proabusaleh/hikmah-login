@@ -206,6 +206,26 @@
             return this.request('verify_2fa', data, options);
         },
 
+        setup2FA(data = {}, options = {}) {
+            return this.request('2fa_setup', data, options);
+        },
+
+        verify2FASetup(data = {}, options = {}) {
+            return this.request('2fa_verify_setup', data, options);
+        },
+
+        disable2FA(data = {}, options = {}) {
+            return this.request('2fa_disable', data, options);
+        },
+
+        generateBackupCodes(options = {}) {
+            return this.request('2fa_generate_backup', {}, options);
+        },
+
+        sendLoginOTP(data = {}, options = {}) {
+            return this.request('2fa_send_login_otp', data, options);
+        },
+
         logout(data = {}, options = {}) {
             return this.request('logout', data, options);
         },
@@ -233,7 +253,12 @@
                 check_username: 'register',
                 check_email: 'register',
                 forgot_password: 'forgot',
-                reset_password: 'reset'
+                reset_password: 'reset',
+                '2fa_setup': 'general',
+                '2fa_verify_setup': 'general',
+                '2fa_disable': 'general',
+                '2fa_generate_backup': 'general',
+                '2fa_send_login_otp': 'general'
             };
             return map[action] || 'general';
         },

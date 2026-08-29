@@ -20,6 +20,7 @@ use Hikmah_Login\Helpers\Helper;
 use Hikmah_Login\Helpers\Validator;
 use Hikmah_Login\Helpers\Sanitizer;
 use Hikmah_Login\Security\Captcha;
+use Hikmah_Login\Security\Two_Factor;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -200,7 +201,7 @@ class Ajax_Login {
         }
 
         // Verify the 2FA code
-        $is_valid = $this->verify_2fa_code( $user_id, $code );
+        $is_valid = Two_Factor::get_instance()->verify_login_code( $user_id, $code );
 
         if ( ! $is_valid ) {
             Helper::send_json(
@@ -266,7 +267,11 @@ class Ajax_Login {
      */
 
     /**
-     * Verify 2FA code.
+     * Verify a 2FA challenge code.
+     *
+     * Delegates to the centralized Two_Factor manager which handles
+     * email OTP (single-use), RFC 6238 TOTP, and hashed single-use
+     * backup codes.
      *
      * @param int    $user_id User ID.
      * @param string $code    User-provided code.
@@ -274,84 +279,6 @@ class Ajax_Login {
      */
     private function verify_2fa_code( $user_id, $code ) {
 
-        $db = new \Hikmah_Login\Database\DB_Manager();
-        $settings = $db->get_2fa_settings( $user_id );
-
-        if ( ! $settings ) {
-            return false;
-        }
-
-        // Check backup codes
-        if ( ! empty( $settings->backup_codes ) ) {
-            $backup_codes = json_decode( $settings->backup_codes, true );
-            if ( is_array( $backup_codes ) && in_array( $code, $backup_codes, true ) ) {
-                // Remove used backup code
-                $backup_codes = array_diff( $backup_codes, [ $code ] );
-                $db->save_2fa_settings(
-                    $user_id,
-                    $settings->secret_key,
-                    $settings->method,
-                    wp_json_encode( array_values( $backup_codes ) )
-                );
-                return true;
-            }
-        }
-
-        // Verify based on method
-        switch ( $settings->method ) {
-            case 'email':
-                // Check email token
-                return $db->verify_email_token( $user_id, $code, '2fa' );
-
-            case 'authenticator':
-                // TOTP verification (simplified — use a library in production)
-                return $this->verify_totp( $settings->secret_key, $code );
-
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * Verify TOTP code (simplified).
-     *
-     * @param string $secret Secret key.
-     * @param string $code   User code.
-     * @return bool
-     */
-    private function verify_totp( $secret, $code ) {
-        // In production, use a proper TOTP library
-        // This is a placeholder for the concept
-        $time_step = floor( time() / 30 );
-
-        for ( $i = -1; $i <= 1; $i++ ) {
-            $expected = $this->generate_totp_code( $secret, $time_step + $i );
-            if ( hash_equals( $expected, $code ) ) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Generate TOTP code (simplified).
-     *
-     * @param string $secret    Secret key.
-     * @param int    $time_step Time step.
-     * @return string 6-digit code.
-     */
-    private function generate_totp_code( $secret, $time_step ) {
-        $binary_time = pack( 'N*', 0, $time_step );
-        $hash = hash_hmac( 'sha1', $binary_time, base64_decode( $secret ), true );
-        $offset = ord( $hash[19] ) & 0xf;
-        $code = (
-            ( ( ord( $hash[ $offset ] ) & 0x7f ) << 24 ) |
-            ( ( ord( $hash[ $offset + 1 ] ) & 0xff ) << 16 ) |
-            ( ( ord( $hash[ $offset + 2 ] ) & 0xff ) << 8 ) |
-            ( ord( $hash[ $offset + 3 ] ) & 0xff )
-        ) % 1000000;
-
-        return str_pad( $code, 6, '0', STR_PAD_LEFT );
+        return Two_Factor::get_instance()->verify_login_code( $user_id, $code );
     }
 }

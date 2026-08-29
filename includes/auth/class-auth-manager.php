@@ -23,6 +23,7 @@ use Hikmah_Login\Helpers\Validator;
 use Hikmah_Login\Helpers\Sanitizer;
 use Hikmah_Login\Helpers\Error_Handler;
 use Hikmah_Login\Database\DB_Manager;
+use Hikmah_Login\Security\Two_Factor;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -235,13 +236,20 @@ class Auth_Manager {
         if ( $this->is_2fa_required( $user ) ) {
             $this->set_auth_state( 'pending_2fa', $user->ID );
 
+            $method = $this->get_2fa_method( $user );
+
+            // Auto-send the email OTP so the code arrives immediately.
+            if ( 'email' === $method ) {
+                Two_Factor::get_instance()->send_email_otp( $user->ID );
+            }
+
             return $this->build_response(
                 true,
                 __( 'Two-factor authentication required.', 'hikmah-login' ),
                 [
                     'requires_2fa' => true,
                     'user_id'      => $user->ID,
-                    '2fa_method'   => $this->get_2fa_method( $user ),
+                    '2fa_method'   => $method,
                 ],
                 '2fa_required'
             );

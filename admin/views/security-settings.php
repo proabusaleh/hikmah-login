@@ -155,6 +155,12 @@ if ( isset( $_POST['hikmah_security_settings_submit'] ) ) {
         isset( $_POST['hikmah_login_logging_enabled'] ) && '1' === $_POST['hikmah_login_logging_enabled'] ? 'yes' : 'no'
     );
 
+    // Two-Factor Authentication
+    update_option(
+        'hikmah_2fa_enabled',
+        isset( $_POST['hikmah_2fa_enabled'] ) && '1' === $_POST['hikmah_2fa_enabled'] ? 'yes' : 'no'
+    );
+
     $settings_saved = true;
 }
 
@@ -188,6 +194,7 @@ $options = [
     'hikmah_allowed_upload_mimes'        => get_option( 'hikmah_allowed_upload_mimes', 'jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,zip' ),
     'hikmah_disable_application_passwords' => get_option( 'hikmah_disable_application_passwords', 'no' ),
     'hikmah_login_logging_enabled'       => get_option( 'hikmah_login_logging_enabled', 'yes' ),
+    'hikmah_2fa_enabled'                 => get_option( 'hikmah_2fa_enabled', 'no' ),
 ];
 
 function __hikmah_checkbox( $name, $checked ) {
@@ -254,6 +261,22 @@ function __hikmah_checkbox( $name, $checked ) {
                             <option value="light" <?php selected( $options['hikmah_captcha_theme'], 'light' ); ?>><?php esc_html_e( 'Light', 'hikmah-login' ); ?></option>
                             <option value="dark" <?php selected( $options['hikmah_captcha_theme'], 'dark' ); ?>><?php esc_html_e( 'Dark', 'hikmah-login' ); ?></option>
                         </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Two-Factor Authentication -->
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px 24px;margin:20px 0;">
+            <h2 style="margin:0 0 4px;">🔐 <?php esc_html_e( 'Two-Factor Authentication', 'hikmah-login' ); ?></h2>
+            <p class="description" style="margin:0 0 16px;"><?php esc_html_e( 'Enable email OTP / authenticator-app verification with single-use backup codes. Users manage their own 2FA on their profile.', 'hikmah-login' ); ?></p>
+
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><label for="hikmah_2fa_enabled"><?php esc_html_e( 'Enable 2FA', 'hikmah-login' ); ?></label></th>
+                    <td>
+                        <?php echo __hikmah_checkbox( 'hikmah_2fa_enabled', $options['hikmah_2fa_enabled'] ); // phpcs:ignore ?>
+                        <span class="description"><?php esc_html_e( 'Allows users and administrators to enable two-factor authentication.', 'hikmah-login' ); ?></span>
                     </td>
                 </tr>
             </table>

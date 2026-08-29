@@ -64,6 +64,16 @@ class Admin_Menu {
             [ $this, 'render_settings' ]
         );
 
+        // Custom UI sub-menu
+        add_submenu_page(
+            'hikmah-login',
+            __( 'Custom UI', 'hikmah-login' ),
+            __( 'Custom UI', 'hikmah-login' ),
+            self::CAPABILITY,
+            'hikmah-login-ui',
+            [ $this, 'render_ui_settings' ]
+        );
+
         // Security sub-menu
         add_submenu_page(
             'hikmah-login',
@@ -87,6 +97,13 @@ class Admin_Menu {
      */
     public function render_settings() {
         $this->load_view( 'security-settings' );
+    }
+
+    /**
+     * Render the Custom UI settings view.
+     */
+    public function render_ui_settings() {
+        $this->load_view( 'ui-settings-page' );
     }
 
     /**

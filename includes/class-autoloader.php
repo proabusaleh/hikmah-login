@@ -60,6 +60,7 @@ class Hikmah_Login_Autoloader {
         $this->namespace_map = [
             'Hikmah_Login\\Traits'     => $this->base_dir . 'traits/',
             'Hikmah_Login\\Auth'       => $this->base_dir . 'auth/',
+            'Hikmah_Login\\Dashboard'  => $this->base_dir . 'dashboard/',
             'Hikmah_Login\\Ajax'       => $this->base_dir . 'ajax/',
             'Hikmah_Login\\Security'   => $this->base_dir . 'security/',
             'Hikmah_Login\\Social'     => $this->base_dir . 'social/',

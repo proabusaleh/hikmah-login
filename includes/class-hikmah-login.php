@@ -294,11 +294,11 @@ final class Hikmah_Login {
          * ================================================
          */
 
-        // User dashboard (profile/security/sessions/history/delete + AJAX).
-        $this->modules['user_dashboard'] = Auth\User_Dashboard::get_instance();
+// User dashboard (overview/profile/security/sessions/social/activity/privacy + AJAX).
+		$this->modules['dashboard'] = Dashboard\Dashboard_Manager::get_instance();
 
-        // [hikmah_dashboard] shortcode.
-        $this->modules['shortcode_dashboard'] = Shortcodes\Dashboard_Shortcode::get_instance();
+		// [hikmah_dashboard] shortcode.
+		$this->modules['shortcode_dashboard'] = Shortcodes\Dashboard_Shortcode::get_instance();
 
         /**
          * ================================================

@@ -4,6 +4,7 @@
  *
  * [hikmah_dashboard]
  * [hikmah_dashboard tab="security"]
+ * [hikmah_dashboard show_header="false"]
  *
  * @package Hikmah_Login
  * @subpackage Shortcodes
@@ -13,62 +14,57 @@
 namespace Hikmah_Login\Shortcodes;
 
 use Hikmah_Login\Traits\Singleton;
-use Hikmah_Login\Helpers\Helper;
+use Hikmah_Login\Dashboard\Dashboard_Manager;
 
 if ( ! defined( 'ABSPATH' ) ) {
-    exit;
+	exit;
 }
 
 class Dashboard_Shortcode {
 
-    use Singleton;
+	use Singleton;
 
-    /**
-     * Constructor.
-     */
-    private function __construct() {
-        add_shortcode( 'hikmah_dashboard', [ $this, 'render' ] );
-    }
+	/**
+	 * Constructor.
+	 */
+	private function __construct() {
+		add_shortcode( 'hikmah_dashboard', [ $this, 'render' ] );
+	}
 
-    /**
-     * Render the dashboard shortcode.
-     *
-     * @param array  $atts    Shortcode attributes.
-     * @param string $content Enclosed content.
-     * @param string $tag     Shortcode tag.
-     * @return string
-     */
-    public function render( $atts = [], $content = '', $tag = '' ) {
+	/**
+	 * Render the dashboard shortcode.
+	 *
+	 * @param array  $atts    Shortcode attributes.
+	 * @param string $content Enclosed content.
+	 * @param string $tag     Shortcode tag.
+	 * @return string
+	 */
+	public function render( $atts = [], $content = '', $tag = '' ) {
 
-        $atts = shortcode_atts( [
-            'tab'          => '',
-            'show_header'  => 'true',
-            'custom_class' => '',
-        ], $atts, $tag );
+		$atts = shortcode_atts( [
+			'tab'          => '',
+			'show_header'  => 'true',
+			'custom_class' => '',
+		], $atts, $tag );
 
-        if ( ! is_user_logged_in() ) {
-            return '<div class="hikmah-login-wrapper"><div class="hikmah-notice hikmah-notice-info"><p>' .
-                sprintf(
-                    wp_kses_post( __( 'Please <a href="%s">log in</a> to view your dashboard.', 'hikmah-login' ) ),
-                    esc_url( Helper::get_login_url() )
-                ) .
-                '</p></div></div>';
-        }
+		if ( ! is_user_logged_in() ) {
+			return Dashboard_Manager::get_instance()->render_guest_fallback();
+		}
 
-        // Override tab if specified.
-        if ( ! empty( $atts['tab'] ) ) {
-            $_GET['tab'] = sanitize_key( $atts['tab'] );
-        }
+		// Allow a default tab override via the shortcode attribute.
+		if ( ! empty( $atts['tab'] ) && empty( $_GET['tab'] ) ) {
+			$_GET['tab'] = sanitize_key( $atts['tab'] );
+		}
 
-        $template = locate_template( 'hikmah-login/user-dashboard.php' );
-        if ( ! $template ) {
-            $template = HIKMAH_LOGIN_DIR . 'public/views/user-dashboard.php';
-        }
+		// Enqueue dashboard script + localized config.
+		wp_enqueue_script(
+			'hikmah-dashboard-script',
+			HIKMAH_LOGIN_URL . 'public/js/dashboard-script.js',
+			[ 'jquery' ],
+			HIKMAH_LOGIN_VERSION,
+			true
+		);
 
-        ob_start();
-        if ( file_exists( $template ) ) {
-            include $template;
-        }
-        return ob_get_clean();
-    }
+		return Dashboard_Manager::get_instance()->render();
+	}
 }

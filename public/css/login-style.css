@@ -642,3 +642,56 @@
         max-width: 100%;
     }
 }
+/* =============================================
+   FORGOT / RESET PASSWORD STYLES
+   ============================================= */
+
+.hikmah-forgot-wrapper,
+.hikmah-reset-wrapper {
+    max-width: 440px;
+}
+
+.hikmah-forgot-wrapper .hikmah-form-subtitle,
+.hikmah-reset-wrapper .hikmah-form-subtitle {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Success state with icon */
+.hikmah-reset-success-state {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.hikmah-reset-success-state .hikmah-success-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+}
+
+.hikmah-reset-success-state h3 {
+    color: var(--hikmah-success);
+    margin: 0 0 8px;
+    font-size: 20px;
+}
+
+.hikmah-reset-success-state p {
+    color: var(--hikmah-text-light);
+    font-size: 14px;
+    margin: 0 0 20px;
+}
+
+/* Back link styling */
+.hikmah-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--hikmah-primary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.hikmah-back-link:hover {
+    text-decoration: underline;
+}

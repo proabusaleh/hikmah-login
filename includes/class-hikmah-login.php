@@ -172,8 +172,10 @@ final class Hikmah_Login {
             // Show SSL warning
             $this->modules['admin_notices']->maybe_show_ssl_warning();
 
+            // Admin menu (Dashboard / Settings / Security)
+            $this->modules['admin_menu'] = Admin\Admin_Menu::get_instance();
+
             // Future admin modules:
-            // $this->modules['admin_menu']     = Admin\Admin_Menu::get_instance();
             // $this->modules['admin_settings'] = Admin\Admin_Settings::get_instance();
             // $this->modules['login_logs']     = Admin\Login_Logs::get_instance();
         }
@@ -201,6 +203,59 @@ final class Hikmah_Login {
 
         // Shortcode (always load — self-registers)
         $this->modules['shortcode_register'] = Shortcodes\Register_Shortcode::get_instance();
+
+        /**
+         * ================================================
+         * PHASE 06: PASSWORD RECOVERY
+         * ================================================
+         */
+
+        // AJAX handler (always load — self-registers)
+        $this->modules['ajax_forgot'] = Ajax\Ajax_Forgot_Password::get_instance();
+
+        // Shortcodes (always load — self-register)
+        $this->modules['shortcode_forgot'] = Shortcodes\Forgot_Password_Shortcode::get_instance();
+        $this->modules['shortcode_reset'] = Shortcodes\Reset_Password_Shortcode::get_instance();
+
+        /**
+         * ================================================
+         * PHASE 07: EMAIL VERIFICATION
+         * ================================================
+         */
+
+        // Email verification module (self-registers hooks/AJAX)
+        $this->modules['email_verification'] = Auth\Email_Verification::get_instance();
+
+        // Shortcode (always load — self-registers)
+        $this->modules['shortcode_verify'] = Shortcodes\Verification_Shortcode::get_instance();
+
+        /**
+         * ================================================
+         * PHASE 08: AJAX ARCHITECTURE
+         * ================================================
+         */
+
+        // Unified AJAX controller + performance optimizer
+        $this->modules['ajax_controller'] = Ajax\Ajax_Controller::get_instance();
+        $this->modules['ajax_optimizer'] = Ajax\Ajax_Optimizer::get_instance();
+
+        /**
+         * ================================================
+         * PHASE 09: SECURITY LAYER
+         * ================================================
+         */
+
+        // Brute Force Protection + IP Manager
+        $this->modules['security_brute_force'] = Security\Brute_Force::get_instance();
+
+        // Unified CAPTCHA (reCAPTCHA v2/v3, hCaptcha, Turnstile)
+        $this->modules['security_captcha'] = Security\Captcha::get_instance();
+
+        // Security Hardening (headers, XML-RPC, enumeration, uploads)
+        $this->modules['security_hardening'] = Security\Security_Hardening::get_instance();
+
+        // Audit Log
+        $this->modules['security_log'] = Security\Security_Log::get_instance();
 
         /**
          * ================================================

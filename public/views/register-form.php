@@ -422,16 +422,7 @@ do_action( 'hikmah_register_before_form', $atts );
             </div>
         <?php endif; ?>
 
-        <!-- CAPTCHA -->
-        <?php if ( $captcha_enabled && ! empty( $site_key ) ) : ?>
-            <div class="hikmah-field hikmah-captcha-field">
-                <?php if ( 'recaptcha_v2' === $captcha_type ) : ?>
-                    <div class="g-recaptcha" data-sitekey="<?php echo esc_attr( $site_key ); ?>"></div>
-                <?php endif; ?>
-                <input type="hidden" name="captcha_response" id="<?php echo esc_attr( $form_id ); ?>-captcha">
-                <span class="hikmah-field-error" data-field="captcha"></span>
-            </div>
-        <?php endif; ?>
+        <!-- CAPTCHA (rendered by Security\Captcha on hikmah_register_form_bottom) -->
 
         <!-- Submit -->
         <div class="hikmah-field hikmah-submit-field">

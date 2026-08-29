@@ -277,7 +277,7 @@ class DB_Manager {
      */
     public function log_login_attempt( $data ) {
 
-        if ( ! Helper::is_feature_enabled( 'login_logging_enabled' ) ) {
+        if ( 'yes' !== get_option( 'hikmah_login_logging_enabled', 'yes' ) ) {
             return false;
         }
 

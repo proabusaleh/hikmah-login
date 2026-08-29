@@ -41,6 +41,9 @@ class Assets {
         // Admin assets
         $this->add_action( 'admin_enqueue_scripts', 'enqueue_admin_assets' );
 
+        // User profile admin assets (verify/unverify resend)
+        $this->add_action( 'admin_enqueue_scripts', 'enqueue_user_profile_assets' );
+
         // Login page assets (wp-login.php override)
         $this->add_action( 'login_enqueue_scripts', 'enqueue_login_page_assets' );
 
@@ -84,11 +87,20 @@ class Assets {
             );
         }
 
+        // AJAX Manager (load before login-script)
+        wp_enqueue_script(
+            'hikmah-ajax',
+            HIKMAH_LOGIN_URL . 'public/js/hikmah-ajax.js',
+            [ 'jquery', 'heartbeat' ],
+            HIKMAH_LOGIN_VERSION,
+            true
+        );
+
         // JS
         wp_enqueue_script(
             'hikmah-login-script',
             HIKMAH_LOGIN_URL . 'public/js/login-script.js',
-            [ 'jquery' ],
+            [ 'jquery', 'hikmah-ajax' ],
             HIKMAH_LOGIN_VERSION,
             true // Load in footer
         );
@@ -151,6 +163,11 @@ class Assets {
             'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
             'restUrl'       => rest_url( 'hikmah-login/v1/' ),
             'nonce'         => wp_create_nonce( 'hikmah_login_nonce' ),
+            'loginNonce'    => wp_create_nonce( 'hikmah_login_action' ),
+            'registerNonce' => wp_create_nonce( 'hikmah_register_action' ),
+            'forgotNonce'   => wp_create_nonce( 'hikmah_forgot_password_action' ),
+            'resetNonce'    => wp_create_nonce( 'hikmah_reset_password_action' ),
+            'generalNonce'  => wp_create_nonce( 'hikmah_login_nonce' ),
             'restNonce'     => wp_create_nonce( 'wp_rest' ),
             'isLoggedIn'    => is_user_logged_in(),
             'userId'        => get_current_user_id(),
@@ -236,6 +253,53 @@ class Assets {
      * ADMIN ASSETS
      * =============================================
      */
+
+    /**
+     * Enqueue assets on the WordPress user profile pages.
+     *
+     * Wires the "Resend Verification Email" button on
+     * the user-edit / profile screens.
+     */
+    public function enqueue_user_profile_assets() {
+
+        $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+
+        if ( ! $screen || ! in_array( $screen->id, [ 'user-edit', 'profile' ], true ) ) {
+            return;
+        }
+
+        $admin_nonce = wp_create_nonce( 'hikmah_admin_nonce' );
+
+        $inline = "
+            (function (\$) {
+                \$(document).on('click', '.hikmah-resend-verify-btn', function (e) {
+                    e.preventDefault();
+                    var btn = \$(this);
+                    var userId = btn.data('user-id');
+                    if (!userId) { return; }
+
+                    btn.prop('disabled', true).text('" . esc_js( __( 'Sending...', 'hikmah-login' ) ) . "');
+
+                    \$.post('" . esc_js( admin_url( 'admin-ajax.php' ) ) . "', {
+                        action: 'hikmah_admin_resend_verification',
+                        nonce: '" . esc_js( $admin_nonce ) . "',
+                        user_id: userId
+                    }, function (res) {
+                        if (res.success) {
+                            btn.text('" . esc_js( __( 'Email sent ✓', 'hikmah-login' ) ) . "').css('color', '#10b981');
+                        } else {
+                            alert(res.message);
+                            btn.prop('disabled', false).text('" . esc_js( __( 'Resend Verification Email', 'hikmah-login' ) ) . "');
+                        }
+                    }).fail(function () {
+                        alert('" . esc_js( __( 'Network error. Please try again.', 'hikmah-login' ) ) . "');
+                        btn.prop('disabled', false).text('" . esc_js( __( 'Resend Verification Email', 'hikmah-login' ) ) . "');
+                    });
+                });
+            })(jQuery);";
+
+        wp_add_inline_script( 'jquery-core', $inline );
+    }
 
     /**
      * Enqueue admin CSS and JS.

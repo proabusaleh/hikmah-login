@@ -525,7 +525,7 @@ class Core_Hooks {
     }
 
     /**
-     * Show custom profile fields on user profile page.
+     * Show custom profile fields (updated with verification controls).
      *
      * @param \WP_User $user User object.
      */
@@ -536,65 +536,155 @@ class Core_Hooks {
         }
 
         $email_verified = get_user_meta( $user->ID, 'hikmah_email_verified', true );
+        $verified_at    = get_user_meta( $user->ID, 'hikmah_email_verified_at', true );
         $last_login     = get_user_meta( $user->ID, 'hikmah_last_login_at', true );
         $login_count    = get_user_meta( $user->ID, 'hikmah_login_count', true );
         $registered_at  = get_user_meta( $user->ID, 'hikmah_registered_at', true );
         $is_suspended   = get_user_meta( $user->ID, 'hikmah_account_suspended', true );
+        $reg_ip         = get_user_meta( $user->ID, 'hikmah_registration_ip', true );
+        $last_ip        = get_user_meta( $user->ID, 'hikmah_last_login_ip', true );
 
         ?>
-        <h3><?php esc_html_e( 'Hikmah Login Information', 'hikmah-login' ); ?></h3>
+        <h3><?php esc_html_e( '🔐 Hikmah Login Information', 'hikmah-login' ); ?></h3>
         <table class="form-table">
+            <!-- Email Verification -->
             <tr>
                 <th><?php esc_html_e( 'Email Verified', 'hikmah-login' ); ?></th>
                 <td>
                     <?php if ( 'yes' === $email_verified ) : ?>
-                        <span style="color: green;">✅ <?php esc_html_e( 'Verified', 'hikmah-login' ); ?></span>
-                    <?php else : ?>
-                        <span style="color: red;">❌ <?php esc_html_e( 'Not Verified', 'hikmah-login' ); ?></span>
-                        <label>
-                            <input type="checkbox" name="hikmah_force_verify" value="1">
-                            <?php esc_html_e( 'Manually verify', 'hikmah-login' ); ?>
+                        <span style="color:#10b981;font-weight:600;">
+                            ✅ <?php esc_html_e( 'Verified', 'hikmah-login' ); ?>
+                        </span>
+                        <?php if ( $verified_at ) : ?>
+                            <br><small style="color:#6b7280;">
+                                <?php echo esc_html( \Hikmah_Login\Helpers\Helper::format_datetime( $verified_at ) ); ?>
+                            </small>
+                        <?php endif; ?>
+                        <br>
+                        <label style="margin-top:8px;display:inline-block;">
+                            <input type="checkbox" name="hikmah_unverify_email" value="1">
+                            <span style="color:#ef4444;">
+                                <?php esc_html_e( 'Revoke verification', 'hikmah-login' ); ?>
+                            </span>
                         </label>
+                    <?php else : ?>
+                        <span style="color:#ef4444;font-weight:600;">
+                            ❌ <?php esc_html_e( 'Not Verified', 'hikmah-login' ); ?>
+                        </span>
+                        <br>
+                        <label style="margin-top:8px;display:inline-block;">
+                            <input type="checkbox" name="hikmah_force_verify" value="1">
+                            <span style="color:#10b981;">
+                                <?php esc_html_e( 'Manually verify email', 'hikmah-login' ); ?>
+                            </span>
+                        </label>
+                        <br>
+                        <a href="#" class="button button-small hikmah-resend-verify-btn"
+                           data-user-id="<?php echo esc_attr( $user->ID ); ?>"
+                           style="margin-top:8px;">
+                            <?php esc_html_e( '📧 Resend Verification Email', 'hikmah-login' ); ?>
+                        </a>
                     <?php endif; ?>
                 </td>
             </tr>
+
+            <!-- Account Status -->
             <tr>
                 <th><?php esc_html_e( 'Account Status', 'hikmah-login' ); ?></th>
                 <td>
-                    <label>
+                    <?php if ( 'yes' === $is_suspended ) : ?>
+                        <span style="color:#ef4444;font-weight:600;">
+                            🚫 <?php esc_html_e( 'Suspended', 'hikmah-login' ); ?>
+                        </span>
+                        <?php
+                        $reason = get_user_meta( $user->ID, 'hikmah_suspension_reason', true );
+                        if ( $reason ) : ?>
+                            <br><small style="color:#6b7280;">
+                                <?php echo esc_html( $reason ); ?>
+                            </small>
+                        <?php endif; ?>
+                    <?php else : ?>
+                        <span style="color:#10b981;font-weight:600;">
+                            ✅ <?php esc_html_e( 'Active', 'hikmah-login' ); ?>
+                        </span>
+                    <?php endif; ?>
+                    <br>
+                    <label style="margin-top:8px;display:inline-block;">
                         <input type="checkbox" name="hikmah_suspend_account" value="1"
                             <?php checked( $is_suspended, 'yes' ); ?>>
                         <?php esc_html_e( 'Suspend this account', 'hikmah-login' ); ?>
                     </label>
-                    <?php if ( 'yes' === $is_suspended ) : ?>
-                        <p class="description" style="color: red;">
-                            <?php esc_html_e( 'This account is currently suspended.', 'hikmah-login' ); ?>
-                        </p>
-                    <?php endif; ?>
                 </td>
             </tr>
+
+            <!-- Login Stats -->
             <tr>
-                <th><?php esc_html_e( 'Last Login', 'hikmah-login' ); ?></th>
+                <th><?php esc_html_e( 'Login Statistics', 'hikmah-login' ); ?></th>
                 <td>
-                    <?php
-                    echo $last_login
-                        ? esc_html( Helper::format_datetime( $last_login ) )
-                        : esc_html__( 'Never', 'hikmah-login' );
-                    ?>
+                    <table style="border-collapse:collapse;">
+                        <tr>
+                            <td style="padding:4px 16px 4px 0;color:#6b7280;">
+                                <?php esc_html_e( 'Total Logins:', 'hikmah-login' ); ?>
+                            </td>
+                            <td style="padding:4px 0;font-weight:600;">
+                                <?php echo esc_html( $login_count ?: '0' ); ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:4px 16px 4px 0;color:#6b7280;">
+                                <?php esc_html_e( 'Last Login:', 'hikmah-login' ); ?>
+                            </td>
+                            <td style="padding:4px 0;">
+                                <?php
+                                echo $last_login
+                                    ? esc_html( \Hikmah_Login\Helpers\Helper::format_datetime( $last_login ) )
+                                    : esc_html__( 'Never', 'hikmah-login' );
+                                ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:4px 16px 4px 0;color:#6b7280;">
+                                <?php esc_html_e( 'Last Login IP:', 'hikmah-login' ); ?>
+                            </td>
+                            <td style="padding:4px 0;">
+                                <code><?php echo esc_html( $last_ip ?: '—' ); ?></code>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:4px 16px 4px 0;color:#6b7280;">
+                                <?php esc_html_e( 'Registered:', 'hikmah-login' ); ?>
+                            </td>
+                            <td style="padding:4px 0;">
+                                <?php
+                                echo $registered_at
+                                    ? esc_html( \Hikmah_Login\Helpers\Helper::format_datetime( $registered_at ) )
+                                    : esc_html__( 'Unknown', 'hikmah-login' );
+                                ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:4px 16px 4px 0;color:#6b7280;">
+                                <?php esc_html_e( 'Registration IP:', 'hikmah-login' ); ?>
+                            </td>
+                            <td style="padding:4px 0;">
+                                <code><?php echo esc_html( $reg_ip ?: '—' ); ?></code>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
+
+            <!-- Force Logout -->
             <tr>
-                <th><?php esc_html_e( 'Total Logins', 'hikmah-login' ); ?></th>
-                <td><?php echo esc_html( $login_count ?: '0' ); ?></td>
-            </tr>
-            <tr>
-                <th><?php esc_html_e( 'Registered', 'hikmah-login' ); ?></th>
+                <th><?php esc_html_e( 'Session Control', 'hikmah-login' ); ?></th>
                 <td>
-                    <?php
-                    echo $registered_at
-                        ? esc_html( Helper::format_datetime( $registered_at ) )
-                        : esc_html__( 'Unknown', 'hikmah-login' );
-                    ?>
+                    <label>
+                        <input type="checkbox" name="hikmah_force_logout" value="1">
+                        <?php esc_html_e( 'Force logout from all devices', 'hikmah-login' ); ?>
+                    </label>
+                    <p class="description">
+                        <?php esc_html_e( 'This will destroy all active sessions for this user.', 'hikmah-login' ); ?>
+                    </p>
                 </td>
             </tr>
         </table>
@@ -602,7 +692,7 @@ class Core_Hooks {
     }
 
     /**
-     * Save custom profile fields.
+     * Save custom profile fields (updated).
      *
      * @param int $user_id User ID.
      */
@@ -612,18 +702,30 @@ class Core_Hooks {
             return;
         }
 
-        // Force email verification
+        $verification = \Hikmah_Login\Auth\Email_Verification::get_instance();
+
+        // Force verify
         if ( isset( $_POST['hikmah_force_verify'] ) ) {
-            Helper::mark_email_verified( $user_id );
+            $verification->manual_verify_user( $user_id, true );
         }
 
-        // Suspend/unsuspend account
+        // Unverify
+        if ( isset( $_POST['hikmah_unverify_email'] ) ) {
+            $verification->manual_verify_user( $user_id, false );
+        }
+
+        // Suspend/unsuspend
+        $auth_manager = \Hikmah_Login\Auth\Auth_Manager::get_instance();
+
         if ( isset( $_POST['hikmah_suspend_account'] ) ) {
-            $auth_manager = Auth_Manager::get_instance();
             $auth_manager->suspend_account( $user_id, 'Manually suspended by admin' );
         } else {
-            $auth_manager = Auth_Manager::get_instance();
             $auth_manager->reactivate_account( $user_id );
+        }
+
+        // Force logout
+        if ( isset( $_POST['hikmah_force_logout'] ) ) {
+            $auth_manager->force_logout( $user_id );
         }
     }
 

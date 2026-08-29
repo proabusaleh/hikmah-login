@@ -289,28 +289,7 @@ do_action( 'hikmah_login_before_form', $atts );
             <?php endif; ?>
         </div>
 
-        <!-- CAPTCHA -->
-        <?php if ( $captcha_enabled && ! empty( $site_key ) ) : ?>
-            <div class="hikmah-field hikmah-captcha-field">
-                <?php if ( 'recaptcha_v2' === $captcha_type ) : ?>
-                    <div class="g-recaptcha"
-                         data-sitekey="<?php echo esc_attr( $site_key ); ?>"
-                         data-callback="hikmahRecaptchaCallback"
-                         data-expired-callback="hikmahRecaptchaExpired">
-                    </div>
-                    <input type="hidden" name="captcha_response" id="<?php echo esc_attr( $form_id ); ?>-captcha">
-                <?php elseif ( 'recaptcha_v3' === $captcha_type ) : ?>
-                    <input type="hidden" name="captcha_response" id="<?php echo esc_attr( $form_id ); ?>-captcha">
-                <?php elseif ( 'turnstile' === $captcha_type ) : ?>
-                    <div class="cf-turnstile"
-                         data-sitekey="<?php echo esc_attr( $site_key ); ?>"
-                         data-callback="hikmahTurnstileCallback">
-                    </div>
-                    <input type="hidden" name="captcha_response" id="<?php echo esc_attr( $form_id ); ?>-captcha">
-                <?php endif; ?>
-                <span class="hikmah-field-error" data-field="captcha"></span>
-            </div>
-        <?php endif; ?>
+        <!-- CAPTCHA (rendered by Security\Captcha on hikmah_login_form_bottom) -->
 
         <!-- 2FA Container (Hidden by default) -->
         <div class="hikmah-2fa-container hikmah-hidden" id="<?php echo esc_attr( $form_id ); ?>-2fa">

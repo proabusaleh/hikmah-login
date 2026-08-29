@@ -19,7 +19,7 @@ use Hikmah_Login\Auth\Auth_Manager;
 use Hikmah_Login\Helpers\Helper;
 use Hikmah_Login\Helpers\Validator;
 use Hikmah_Login\Helpers\Sanitizer;
-use Hikmah_Login\Helpers\Error_Handler;
+use Hikmah_Login\Security\Captcha;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -47,22 +47,13 @@ class Ajax_Login {
 
     /**
      * Register AJAX hooks.
+     *
+     * Direct per-action admin-ajax registrations are intentionally
+     * omitted — all requests now route through the unified
+     * Ajax_Controller (action: hikmah_ajax).
      */
     private function register_hooks() {
-        // Login (for non-logged-in users)
-        $this->add_ajax_nopriv( 'hikmah_login', 'handle_login' );
-
-        // Logout (for logged-in users)
-        $this->add_ajax( 'hikmah_logout', 'handle_logout' );
-
-        // 2FA verification
-        $this->add_ajax_nopriv( 'hikmah_verify_2fa', 'handle_2fa_verification' );
-
-        // Resend verification email
-        $this->add_ajax_nopriv( 'hikmah_resend_verification', 'handle_resend_verification' );
-
-        // Check login status
-        $this->add_ajax_both( 'hikmah_check_status', 'handle_check_status' );
+        // Handlers are dispatched directly by Ajax_Controller.
     }
 
     /**
@@ -76,17 +67,7 @@ class Ajax_Login {
      */
     public function handle_login() {
 
-        // Step 1: Verify nonce
-        if ( ! Helper::verify_nonce( 'hikmah_login_action', 'hikmah_login_nonce' ) ) {
-            Helper::send_json(
-                false,
-                __( 'Security verification failed. Please refresh the page and try again.', 'hikmah-login' ),
-                [],
-                403
-            );
-        }
-
-        // Step 2: Check if already logged in
+        // Step 1: Check if already logged in
         if ( is_user_logged_in() ) {
             Helper::send_json(
                 true,
@@ -110,10 +91,14 @@ class Ajax_Login {
                 ? sanitize_text_field( wp_unslash( $_POST['captcha_response'] ) )
                 : '';
 
-            if ( ! $this->verify_captcha( $captcha_response ) ) {
+            $captcha_result = Captcha::get_instance()->verify( $captcha_response );
+
+            if ( is_wp_error( $captcha_result ) || true !== $captcha_result ) {
                 Helper::send_json(
                     false,
-                    __( 'CAPTCHA verification failed. Please try again.', 'hikmah-login' ),
+                    is_wp_error( $captcha_result )
+                        ? $captcha_result->get_error_message()
+                        : __( 'CAPTCHA verification failed. Please try again.', 'hikmah-login' ),
                     [ 'field' => 'captcha' ],
                     400
                 );
@@ -164,11 +149,6 @@ class Ajax_Login {
      */
     public function handle_logout() {
 
-        // Verify nonce
-        if ( ! Helper::verify_nonce( 'hikmah_login_action', 'hikmah_login_nonce' ) ) {
-            Helper::send_json( false, __( 'Security check failed.', 'hikmah-login' ), [], 403 );
-        }
-
         $redirect = isset( $_POST['redirect'] )
             ? sanitize_text_field( wp_unslash( $_POST['redirect'] ) )
             : '';
@@ -192,11 +172,6 @@ class Ajax_Login {
      * Handle 2FA code verification.
      */
     public function handle_2fa_verification() {
-
-        // Verify nonce
-        if ( ! Helper::verify_nonce( 'hikmah_login_action', 'hikmah_login_nonce' ) ) {
-            Helper::send_json( false, __( 'Security check failed.', 'hikmah-login' ), [], 403 );
-        }
 
         $user_id = isset( $_POST['user_id'] ) ? absint( $_POST['user_id'] ) : 0;
         $code    = isset( $_POST['code'] ) ? sanitize_text_field( wp_unslash( $_POST['code'] ) ) : '';
@@ -257,92 +232,6 @@ class Ajax_Login {
 
     /**
      * =============================================
-     * RESEND VERIFICATION HANDLER
-     * =============================================
-     */
-
-    /**
-     * Handle resend verification email request.
-     */
-    public function handle_resend_verification() {
-
-        if ( ! Helper::verify_nonce( 'hikmah_login_action', 'hikmah_login_nonce' ) ) {
-            Helper::send_json( false, __( 'Security check failed.', 'hikmah-login' ), [], 403 );
-        }
-
-        $email = isset( $_POST['email'] )
-            ? sanitize_email( wp_unslash( $_POST['email'] ) )
-            : '';
-
-        if ( empty( $email ) || ! is_email( $email ) ) {
-            Helper::send_json(
-                false,
-                __( 'Please enter a valid email address.', 'hikmah-login' ),
-                [],
-                400
-            );
-        }
-
-        $user = get_user_by( 'email', $email );
-
-        if ( ! $user ) {
-            // Don't reveal if email exists
-            Helper::send_json(
-                true,
-                __( 'If an account exists with this email, a verification link has been sent.', 'hikmah-login' )
-            );
-        }
-
-        if ( Helper::is_email_verified( $user->ID ) ) {
-            Helper::send_json(
-                true,
-                __( 'Your email is already verified. Please log in.', 'hikmah-login' )
-            );
-        }
-
-        // Rate limit: max 3 resends per hour
-        $rate_key = 'hikmah_resend_' . md5( $email );
-        $resend_count = (int) get_transient( $rate_key );
-
-        if ( $resend_count >= 3 ) {
-            Helper::send_json(
-                false,
-                __( 'Too many requests. Please wait before requesting another verification email.', 'hikmah-login' ),
-                [],
-                429
-            );
-        }
-
-        set_transient( $rate_key, $resend_count + 1, HOUR_IN_SECONDS );
-
-        // Generate and send verification email
-        $db = new \Hikmah_Login\Database\DB_Manager();
-        $token = $db->create_email_token( $user->ID, 'verification', 1440 ); // 24 hours
-
-        $verification_url = add_query_arg( [
-            'hikmah_verify' => $token,
-            'user_id'       => $user->ID,
-        ], Helper::get_login_url() );
-
-        $sent = $this->send_verification_email( $user, $verification_url );
-
-        if ( $sent ) {
-            Helper::send_json(
-                true,
-                __( 'Verification email sent! Please check your inbox.', 'hikmah-login' )
-            );
-        } else {
-            Helper::send_json(
-                false,
-                __( 'Failed to send verification email. Please try again later.', 'hikmah-login' ),
-                [],
-                500
-            );
-        }
-    }
-
-    /**
-     * =============================================
      * STATUS CHECK HANDLER
      * =============================================
      */
@@ -375,69 +264,6 @@ class Ajax_Login {
      * HELPER METHODS
      * =============================================
      */
-
-    /**
-     * Verify CAPTCHA response.
-     *
-     * @param string $response CAPTCHA response token.
-     * @return bool
-     */
-    private function verify_captcha( $response ) {
-
-        if ( empty( $response ) ) {
-            return false;
-        }
-
-        $captcha_type = get_option( 'hikmah_captcha_type', 'recaptcha_v2' );
-        $secret_key   = get_option( 'hikmah_recaptcha_secret_key', '' );
-
-        if ( empty( $secret_key ) ) {
-            return true; // No secret configured, skip
-        }
-
-        $verify_urls = [
-            'recaptcha_v2' => 'https://www.google.com/recaptcha/api/siteverify',
-            'recaptcha_v3' => 'https://www.google.com/recaptcha/api/siteverify',
-            'hcaptcha'     => 'https://hcaptcha.com/siteverify',
-            'turnstile'    => 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-        ];
-
-        $url = $verify_urls[ $captcha_type ] ?? '';
-
-        if ( empty( $url ) ) {
-            return false;
-        }
-
-        $api_response = wp_remote_post( $url, [
-            'body' => [
-                'secret'   => $secret_key,
-                'response' => $response,
-                'remoteip' => Helper::get_client_ip(),
-            ],
-            'timeout' => 10,
-        ] );
-
-        if ( is_wp_error( $api_response ) ) {
-            Error_Handler::error( 'CAPTCHA verification API error: ' . $api_response->get_error_message() );
-            return false;
-        }
-
-        $body = json_decode( wp_remote_retrieve_body( $api_response ), true );
-
-        if ( ! $body || empty( $body['success'] ) ) {
-            return false;
-        }
-
-        // For reCAPTCHA v3, check score
-        if ( 'recaptcha_v3' === $captcha_type ) {
-            $min_score = (float) get_option( 'hikmah_recaptcha_min_score', 0.5 );
-            if ( isset( $body['score'] ) && $body['score'] < $min_score ) {
-                return false;
-            }
-        }
-
-        return true;
-    }
 
     /**
      * Verify 2FA code.
@@ -527,48 +353,5 @@ class Ajax_Login {
         ) % 1000000;
 
         return str_pad( $code, 6, '0', STR_PAD_LEFT );
-    }
-
-    /**
-     * Send verification email.
-     *
-     * @param \WP_User $user             User object.
-     * @param string   $verification_url Verification URL.
-     * @return bool
-     */
-    private function send_verification_email( $user, $verification_url ) {
-
-        $site_name = get_bloginfo( 'name' );
-        $subject   = sprintf(
-            /* translators: %s: Site name */
-            __( '[%s] Verify Your Email Address', 'hikmah-login' ),
-            $site_name
-        );
-
-        $message = sprintf(
-            /* translators: 1: User display name 2: Site name 3: Verification URL */
-            __(
-                "Hi %1\$s,\n\n" .
-                "Thank you for registering at %2\$s.\n\n" .
-                "Please click the link below to verify your email address:\n\n" .
-                "%3\$s\n\n" .
-                "This link will expire in 24 hours.\n\n" .
-                "If you did not create an account, please ignore this email.\n\n" .
-                "Best regards,\n" .
-                "%2\$s Team",
-                'hikmah-login'
-            ),
-            $user->display_name,
-            $site_name,
-            $verification_url
-        );
-
-        $headers = [
-            'Content-Type: text/plain; charset=UTF-8',
-            'From: ' . get_option( 'hikmah_email_from_name', $site_name )
-                   . ' <' . get_option( 'hikmah_email_from_address', get_option( 'admin_email' ) ) . '>',
-        ];
-
-        return wp_mail( $user->user_email, $subject, $message, $headers );
     }
 }

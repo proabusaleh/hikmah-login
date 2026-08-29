@@ -19,6 +19,7 @@ use Hikmah_Login\Helpers\Helper;
 use Hikmah_Login\Helpers\Validator;
 use Hikmah_Login\Helpers\Sanitizer;
 use Hikmah_Login\Helpers\Error_Handler;
+use Hikmah_Login\Security\Captcha;
 use Hikmah_Login\Database\DB_Manager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -32,11 +33,13 @@ class Ajax_Register {
 
     /**
      * Constructor.
+     *
+     * Direct per-action admin-ajax registrations are intentionally
+     * omitted — all requests now route through the unified
+     * Ajax_Controller (action: hikmah_ajax).
      */
     private function __construct() {
-        $this->add_ajax_nopriv( 'hikmah_register', 'handle_registration' );
-        $this->add_ajax_nopriv( 'hikmah_check_username', 'handle_check_username' );
-        $this->add_ajax_nopriv( 'hikmah_check_email', 'handle_check_email' );
+        // Handlers are dispatched directly by Ajax_Controller.
     }
 
     /**
@@ -50,12 +53,7 @@ class Ajax_Register {
      */
     public function handle_registration() {
 
-        // Step 1: Verify nonce
-        if ( ! check_ajax_referer( 'hikmah_register_action', 'hikmah_register_nonce', false ) ) {
-            Helper::send_json( false, __( 'Security verification failed. Please refresh and try again.', 'hikmah-login' ), [], 403 );
-        }
-
-        // Step 2: Check if registration is enabled
+        // Step 1: Check if registration is enabled
         if ( 'yes' !== get_option( 'hikmah_registration_enabled', 'yes' ) ) {
             Helper::send_json( false, __( 'Registration is currently disabled.', 'hikmah-login' ), [], 403 );
         }
@@ -104,8 +102,17 @@ class Ajax_Register {
                 ? sanitize_text_field( wp_unslash( $_POST['captcha_response'] ) )
                 : '';
 
-            if ( ! $this->verify_captcha( $captcha_response ) ) {
-                Helper::send_json( false, __( 'CAPTCHA verification failed.', 'hikmah-login' ), [ 'field' => 'captcha' ], 400 );
+            $captcha_result = Captcha::get_instance()->verify( $captcha_response );
+
+            if ( is_wp_error( $captcha_result ) || true !== $captcha_result ) {
+                Helper::send_json(
+                    false,
+                    is_wp_error( $captcha_result )
+                        ? $captcha_result->get_error_message()
+                        : __( 'CAPTCHA verification failed.', 'hikmah-login' ),
+                    [ 'field' => 'captcha' ],
+                    400
+                );
             }
         }
 
@@ -239,8 +246,6 @@ class Ajax_Register {
      */
     public function handle_check_username() {
 
-        check_ajax_referer( 'hikmah_register_action', 'hikmah_register_nonce' );
-
         $username = sanitize_user( wp_unslash( $_POST['username'] ?? '' ) );
 
         if ( empty( $username ) || mb_strlen( $username ) < 3 ) {
@@ -272,8 +277,6 @@ class Ajax_Register {
      * Check if email is available (AJAX).
      */
     public function handle_check_email() {
-
-        check_ajax_referer( 'hikmah_register_action', 'hikmah_register_nonce' );
 
         $email = sanitize_email( wp_unslash( $_POST['email'] ?? '' ) );
 
@@ -411,56 +414,5 @@ class Ajax_Register {
         ];
 
         wp_mail( $user->user_email, $subject, $message, $headers );
-    }
-
-    /**
-     * Verify CAPTCHA (reused from Ajax_Login logic).
-     *
-     * @param string $response CAPTCHA response.
-     * @return bool
-     */
-    private function verify_captcha( $response ) {
-
-        if ( empty( $response ) ) {
-            return false;
-        }
-
-        $secret_key = get_option( 'hikmah_recaptcha_secret_key', '' );
-
-        if ( empty( $secret_key ) ) {
-            return true;
-        }
-
-        $captcha_type = get_option( 'hikmah_captcha_type', 'recaptcha_v2' );
-
-        $urls = [
-            'recaptcha_v2' => 'https://www.google.com/recaptcha/api/siteverify',
-            'recaptcha_v3' => 'https://www.google.com/recaptcha/api/siteverify',
-            'hcaptcha'     => 'https://hcaptcha.com/siteverify',
-            'turnstile'    => 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-        ];
-
-        $url = $urls[ $captcha_type ] ?? '';
-
-        if ( empty( $url ) ) {
-            return false;
-        }
-
-        $api_response = wp_remote_post( $url, [
-            'body'    => [
-                'secret'   => $secret_key,
-                'response' => $response,
-                'remoteip' => Helper::get_client_ip(),
-            ],
-            'timeout' => 10,
-        ] );
-
-        if ( is_wp_error( $api_response ) ) {
-            return false;
-        }
-
-        $body = json_decode( wp_remote_retrieve_body( $api_response ), true );
-
-        return ! empty( $body['success'] );
     }
 }

@@ -1,0 +1,29 @@
+/**
+ * Hikmah Login — wp-login.php Override Stylesheet
+ *
+ * Applies the custom logo / branding on the default WordPress
+ * login screen. Only enqueued when a custom logo is configured.
+ *
+ * @package Hikmah_Login
+ * @version 1.0.0
+ */
+
+/* Custom logo on the WP login page */
+.login h1 a {
+	background-size: contain;
+	background-position: center top;
+	background-repeat: no-repeat;
+	width: 320px;
+	height: 96px;
+	margin: 0 auto 12px;
+}
+
+.login form {
+	border-radius: 4px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.login .button-primary {
+	width: 100%;
+	margin-top: 8px;
+}

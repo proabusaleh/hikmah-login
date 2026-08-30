@@ -50,7 +50,7 @@ define( 'HIKMAH_LOGIN_MIN_WP', '5.8' );
 define( 'HIKMAH_LOGIN_DB_PREFIX', 'hikmah_login_' );
 
 // Debug Mode (set false in production)
-define( 'HIKMAH_LOGIN_DEBUG', true );
+define( 'HIKMAH_LOGIN_DEBUG', false );
 
 /**
  * =============================================

@@ -73,7 +73,7 @@ class Two_Factor {
 	 * 2FA feature is disabled.
 	 */
 	private function __construct() {
-		$this->db = DB_Manager::get_instance();
+		$this->db = new DB_Manager();
 
 		if ( ! Helper::is_feature_enabled( '2fa_enabled' ) ) {
 			return;

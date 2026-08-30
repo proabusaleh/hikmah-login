@@ -1,0 +1,646 @@
+/**
+ * Hikmah Dashboard Stylesheet
+ *
+ * Implements styling for front-end portals, 
+ * grids, interactive tables, 2FA panels, and custom overlay modals.
+ *
+ * @package Hikmah_Login
+ * @since 1.0.0
+ */
+
+/* ─────────────────────────────────────────────
+   DESIGN TOKENS & SYSTEM VARIABLES
+   ───────────────────────────────────────────── */
+:root {
+  --hikmah-primary: #3b82f6;
+  --hikmah-primary-hover: #2563eb;
+  --hikmah-secondary: #64748b;
+  --hikmah-secondary-hover: #475569;
+  --hikmah-danger: #ef4444;
+  --hikmah-danger-hover: #dc2626;
+  --hikmah-danger-light: #fef2f2;
+  --hikmah-success: #10b981;
+  --hikmah-success-light: #ecfdf5;
+  --hikmah-warning: #f59e0b;
+  --hikmah-warning-light: #fffbeb;
+  
+  --hikmah-bg-main: #f8fafc;
+  --hikmah-bg-card: #ffffff;
+  --hikmah-border-color: #e2e8f0;
+  
+  --hikmah-text-dark: #0f172a;
+  --hikmah-text-muted: #64748b;
+  --hikmah-text-light: #ffffff;
+  
+  --hikmah-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  --hikmah-radius-sm: 4px;
+  --hikmah-radius-md: 8px;
+  --hikmah-radius-lg: 12px;
+  
+  --hikmah-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --hikmah-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* ─────────────────────────────────────────────
+   LAYOUT ENGINE & SIDEBAR SYSTEM
+   ───────────────────────────────────────────── */
+.hikmah-dashboard {
+  font-family: var(--hikmah-font);
+  background-color: var(--hikmah-bg-main);
+  color: var(--hikmah-text-dark);
+  display: flex;
+  min-height: 650px;
+  border: 1px solid var(--hikmah-border-color);
+  border-radius: var(--hikmah-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--hikmah-shadow);
+}
+
+.hikmah-dashboard__sidebar {
+  width: 260px;
+  background-color: var(--hikmah-bg-card);
+  border-right: 1px solid var(--hikmah-border-color);
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hikmah-dashboard__sidebar-logo {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.hikmah-dashboard__sidebar-logo img {
+  max-width: 140px;
+  height: auto;
+}
+
+.hikmah-dashboard__menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hikmah-dashboard__menu-item a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--hikmah-text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: var(--hikmah-radius-md);
+  transition: all 0.2s ease;
+}
+
+.hikmah-dashboard__menu-item a:hover {
+  background-color: var(--hikmah-bg-main);
+  color: var(--hikmah-primary);
+}
+
+.hikmah-dashboard__menu-item--active a {
+  background-color: var(--hikmah-primary);
+  color: var(--hikmah-text-light);
+}
+
+.hikmah-dashboard__menu-item--active a:hover {
+  background-color: var(--hikmah-primary);
+  color: var(--hikmah-text-light);
+}
+
+.hikmah-dashboard__content {
+  flex: 1;
+  background-color: var(--hikmah-bg-card);
+  padding: 40px;
+  overflow-y: auto;
+}
+
+/* Mobile responsive menu headers */
+.hikmah-dashboard__mobile-header {
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: var(--hikmah-bg-card);
+  border-bottom: 1px solid var(--hikmah-border-color);
+}
+
+/* ─────────────────────────────────────────────
+   GLOBAL UI ELEMENTS & BUTTONS
+   ───────────────────────────────────────────── */
+.hikmah-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-family: var(--hikmah-font);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--hikmah-radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  line-height: 1.5;
+}
+
+.hikmah-btn--secondary {
+  background-color: var(--hikmah-bg-main);
+  border-color: var(--hikmah-border-color);
+  color: var(--hikmah-text-muted);
+}
+
+.hikmah-btn--secondary:hover:not(:disabled) {
+  background-color: var(--hikmah-border-color);
+  color: var(--hikmah-text-dark);
+}
+
+.hikmah-btn--danger {
+  background-color: var(--hikmah-danger);
+  color: var(--hikmah-text-light);
+}
+
+.hikmah-btn--danger:hover:not(:disabled) {
+  background-color: var(--hikmah-danger-hover);
+}
+
+.hikmah-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Spinner Animations */
+.hikmah-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--hikmah-text-light);
+  animation: hikmahSpin 0.8s linear infinite;
+}
+
+@keyframes hikmahSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Form Styling Rules */
+.hikmah-form-group {
+  margin-bottom: 20px;
+}
+
+.hikmah-form-label {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--hikmah-text-dark);
+}
+
+.hikmah-form-input, .hikmah-form-select {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid var(--hikmah-border-color);
+  border-radius: var(--hikmah-radius-md);
+  background-color: var(--hikmah-bg-main);
+  transition: border-color 0.2s ease;
+}
+
+.hikmah-form-input:focus, .hikmah-form-select:focus {
+  outline: none;
+  border-color: var(--hikmah-primary);
+  background-color: var(--hikmah-bg-card);
+}
+
+.hikmah-form-checkbox {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--hikmah-text-muted);
+}
+
+.hikmah-form-checkbox input[type="checkbox"] {
+  margin-top: 3px;
+}
+
+/* ─────────────────────────────────────────────
+   NOTICES & ALERTS
+   ───────────────────────────────────────────── */
+.hikmah-dashboard__notices-wrapper {
+  margin-bottom: 30px;
+}
+
+.hikmah-dashboard__notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-radius: var(--hikmah-radius-md);
+  margin-bottom: 15px;
+  border-left: 4px solid;
+}
+
+.hikmah-dashboard__notice--success {
+  background-color: var(--hikmah-success-light);
+  border-color: var(--hikmah-success);
+  color: #065f46;
+}
+
+.hikmah-dashboard__notice--error {
+  background-color: var(--hikmah-danger-light);
+  border-color: var(--hikmah-danger);
+  color: #991b1b;
+}
+
+.hikmah-dashboard__notice-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hikmah-dashboard__notice-content p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.hikmah-dashboard__notice-dismiss {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.hikmah-dashboard__notice-dismiss:hover {
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────
+   TAB: ACCOUNT MANAGEMENT (GDPR)
+   ───────────────────────────────────────────── */
+.hikmah-tab-account {
+  display: flex;
+  flex-direction: column;
+  gap: 35px;
+}
+
+.hikmah-tab-account__section {
+  background: var(--hikmah-bg-card);
+  border: 1px solid var(--hikmah-border-color);
+  border-radius: var(--hikmah-radius-lg);
+  overflow: hidden;
+}
+
+.hikmah-tab-account__section--danger {
+  border-color: #fca5a5;
+}
+
+.hikmah-tab-account__section-header {
+  padding: 20px 25px;
+  border-bottom: 1px solid var(--hikmah-border-color);
+  background-color: var(--hikmah-bg-main);
+}
+
+.hikmah-tab-account__section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--hikmah-text-dark);
+}
+
+.hikmah-tab-account__section-title--danger {
+  color: var(--hikmah-danger);
+}
+
+.hikmah-tab-account__section-body {
+  padding: 25px;
+}
+
+/* Info Table Layout */
+.hikmah-tab-account__info-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hikmah-tab-account__info-table th {
+  text-align: left;
+  width: 250px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--hikmah-text-muted);
+  padding: 12px 10px 12px 0;
+  border-bottom: 1px solid var(--hikmah-border-color);
+}
+
+.hikmah-tab-account__info-table td {
+  padding: 12px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--hikmah-border-color);
+}
+
+.hikmah-tab-account__info-table tr:last-child th,
+.hikmah-tab-account__info-table tr:last-child td {
+  border-bottom: none;
+}
+
+.hikmah-tab-account__description {
+  margin: 0 0 20px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--hikmah-text-muted);
+}
+
+/* Pending Request Notifications */
+.hikmah-tab-account__pending-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 20px;
+  background-color: var(--hikmah-warning-light);
+  border: 1px solid #fde047;
+  color: #854d0e;
+  border-radius: var(--hikmah-radius-md);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Portability List Styling */
+.hikmah-tab-account__export-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.hikmah-tab-account__export-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--hikmah-text-dark);
+}
+
+.hikmah-tab-account__export-list li .dashicons {
+  color: var(--hikmah-success);
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.hikmah-tab-account__export-format {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.hikmah-tab-account__export-format label {
+  margin-bottom: 0;
+}
+
+.hikmah-tab-account__export-format select {
+  max-width: 150px;
+}
+
+/* Danger Zone Content styling */
+.hikmah-tab-account__danger-description {
+  font-size: 14px;
+  color: var(--hikmah-text-dark);
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.hikmah-tab-account__delete-consequences {
+  background-color: var(--hikmah-danger-light);
+  border: 1px solid #fca5a5;
+  border-radius: var(--hikmah-radius-md);
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.hikmah-tab-account__delete-consequences h5 {
+  margin: 0 0 12px 0;
+  color: #991b1b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hikmah-tab-account__delete-consequences ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hikmah-tab-account__delete-consequences li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #7f1d1d;
+}
+
+.hikmah-tab-account__delete-consequences li .dashicons {
+  color: var(--hikmah-danger);
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.hikmah-tab-account__admin-warning {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 20px;
+  background-color: var(--hikmah-bg-main);
+  border: 1px dashed var(--hikmah-border-color);
+  border-radius: var(--hikmah-radius-md);
+}
+
+.hikmah-tab-account__admin-warning p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--hikmah-text-muted);
+}
+
+.hikmah-tab-account__admin-warning .dashicons {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  color: var(--hikmah-secondary);
+}
+
+/* ─────────────────────────────────────────────
+   MODAL WINDOW OVERLAYS
+   ───────────────────────────────────────────── */
+.hikmah-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.hikmah-modal__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.hikmah-modal__content {
+  position: relative;
+  background-color: var(--hikmah-bg-card);
+  width: 100%;
+  max-width: 500px;
+  border-radius: var(--hikmah-radius-lg);
+  box-shadow: var(--hikmah-shadow-lg);
+  overflow: hidden;
+  animation: hikmahSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 10;
+}
+
+@keyframes hikmahSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.hikmah-modal__header {
+  padding: 20px 25px;
+  background-color: var(--hikmah-bg-main);
+  border-bottom: 1px solid var(--hikmah-border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hikmah-modal__header h4 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--hikmah-text-dark);
+}
+
+.hikmah-modal__content--danger .hikmah-modal__header h4 {
+  color: var(--hikmah-danger);
+}
+
+.hikmah-modal__close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--hikmah-text-muted);
+  padding: 4px;
+  border-radius: var(--hikmah-radius-sm);
+  transition: background-color 0.2s;
+}
+
+.hikmah-modal__close:hover {
+  background-color: var(--hikmah-border-color);
+  color: var(--hikmah-text-dark);
+}
+
+.hikmah-modal__body {
+  padding: 25px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.hikmah-modal__footer {
+  padding: 15px 25px;
+  background-color: var(--hikmah-bg-main);
+  border-top: 1px solid var(--hikmah-border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* ─────────────────────────────────────────────
+   RESPONSIVE DESIGN (BREAKPOINTS)
+   ───────────────────────────────────────────── */
+@media screen and (max-width: 900px) {
+  .hikmah-dashboard {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .hikmah-dashboard__mobile-header {
+    display: flex;
+  }
+
+  .hikmah-dashboard__sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--hikmah-border-color);
+    padding: 10px 20px;
+    display: none; /* Controlled interactively using mobile JS toggles */
+  }
+
+  .hikmah-dashboard__sidebar--open {
+    display: flex;
+  }
+
+  .hikmah-dashboard__content {
+    padding: 25px;
+  }
+
+  .hikmah-tab-account__info-table th {
+    width: 150px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .hikmah-tab-account__info-table tr {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid var(--hikmah-border-color);
+  }
+
+  .hikmah-tab-account__info-table th,
+  .hikmah-tab-account__info-table td {
+    width: 100%;
+    padding: 8px 0;
+    border-bottom: none;
+  }
+
+  .hikmah-tab-account__info-table th {
+    padding-bottom: 2px;
+    font-size: 13px;
+  }
+
+  .hikmah-modal__content {
+    width: 90%;
+    margin: 0 auto;
+  }
+}

@@ -1,0 +1,287 @@
+/**
+ * Hikmah Authentication Card Stylesheet
+ *
+ * Styles for front-end Login, Registration, and Recovery interfaces.
+ *
+ * @package Hikmah_Login
+ * @since 1.0.0
+ */
+
+.hikmah-auth-card {
+  max-width: 440px;
+  margin: 40px auto;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #0f172a;
+}
+
+.hikmah-auth-card__header {
+  padding: 35px 30px 15px 30px;
+  text-align: center;
+}
+
+.hikmah-auth-card__logo {
+  max-height: 55px;
+  width: auto;
+  margin-bottom: 15px;
+}
+
+.hikmah-auth-card__title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: #0f172a;
+}
+
+.hikmah-auth-card__subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.hikmah-auth-card__body {
+  padding: 20px 30px 30px 30px;
+}
+
+.hikmah-auth-card__footer {
+  padding: 16px 30px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+  font-size: 13.5px;
+  color: #64748b;
+}
+
+.hikmah-auth-card__footer a {
+  color: #3b82f6;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.hikmah-auth-card__footer a:hover {
+  text-decoration: underline;
+}
+
+/* Alert Notifications */
+.hikmah-auth-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  margin-bottom: 20px;
+  border-left: 4px solid;
+}
+
+.hikmah-auth-alert p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.hikmah-auth-alert--error {
+  background-color: #fef2f2;
+  border-color: #ef4444;
+  color: #991b1b;
+}
+
+.hikmah-auth-alert--success {
+  background-color: #ecfdf5;
+  border-color: #10b981;
+  color: #065f46;
+}
+
+/* Form Controls & Floating Icons */
+.hikmah-form-group {
+  margin-bottom: 18px;
+}
+
+.hikmah-form-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.hikmah-form-label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.hikmah-form-link {
+  font-size: 12.5px;
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.hikmah-form-link:hover {
+  text-decoration: underline;
+}
+
+.hikmah-form-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.hikmah-form-icon {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  font-size: 18px;
+  pointer-events: none;
+}
+
+.hikmah-form-input-wrapper .hikmah-form-input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  font-size: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.hikmah-form-input-wrapper .hikmah-form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.hikmah-password-toggle {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 4px;
+}
+
+.hikmah-password-toggle:hover {
+  color: #475569;
+}
+
+.hikmah-form-description {
+  font-size: 12px;
+  color: #64748b;
+  margin: 6px 0 0 0;
+}
+
+.hikmah-btn--block {
+  width: 100%;
+  padding: 12px;
+  font-size: 14.5px;
+  font-weight: 600;
+  border-radius: 8px;
+  margin-top: 5px;
+}
+
+.hikmah-btn--primary {
+  background-color: #3b82f6;
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+.hikmah-btn--primary:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+/* Social Login Divider */
+.hikmah-auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 24px 0 18px 0;
+  color: #94a3b8;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.hikmah-auth-divider::before,
+.hikmah-auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.hikmah-auth-divider span {
+  padding: 0 12px;
+}
+
+/* Password Strength Indicator */
+.hikmah-password-strength-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.hikmah-password-strength {
+  flex: 1;
+  height: 5px;
+  background-color: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.hikmah-password-strength__fill {
+  height: 100%;
+  width: 0;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.hikmah-password-strength__fill--weak {
+  background-color: #ef4444;
+}
+
+.hikmah-password-strength__fill--medium {
+  background-color: #f59e0b;
+}
+
+.hikmah-password-strength__fill--strong {
+  background-color: #10b981;
+}
+
+.hikmah-password-strength__text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  min-width: 55px;
+}
+
+.hikmah-password-requirements {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hikmah-password-requirements__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.hikmah-password-requirements__item--pass {
+  color: #10b981;
+}
+
+.hikmah-password-requirements__item--fail {
+  color: #ef4444;
+}

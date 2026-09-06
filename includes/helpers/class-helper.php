@@ -54,6 +54,37 @@ class Helper {
     }
 
     /**
+     * Convert an absolute URL to a document-relative URL.
+     *
+     * Strips the scheme and host so AJAX/REST endpoints always target
+     * the origin the page was served from (avoids cross-origin failures
+     * on local/development hosts that differ from siteurl/home).
+     *
+     * @param string $url Absolute URL.
+     * @return string Relative (path-based) URL.
+     */
+    public static function relative_url( $url ) {
+
+        $parsed = wp_parse_url( $url );
+
+        if ( is_array( $parsed ) && isset( $parsed['path'] ) ) {
+            $relative = $parsed['path'];
+
+            if ( isset( $parsed['query'] ) ) {
+                $relative .= '?' . $parsed['query'];
+            }
+
+            if ( isset( $parsed['fragment'] ) ) {
+                $relative .= '#' . $parsed['fragment'];
+            }
+
+            return $relative;
+        }
+
+        return $url;
+    }
+
+    /**
      * Get the login page URL.
      *
      * @param array $query Optional query args.

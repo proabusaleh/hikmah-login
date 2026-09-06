@@ -106,10 +106,10 @@ if ( ! is_user_logged_in() || ! isset( $user, $dashboard ) ) {
 
 <?php
 wp_localize_script( 'hikmah-dashboard-script', 'hikmahDashboard', [
-	'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+	'ajaxUrl'   => \Hikmah_Login\Helpers\Helper::relative_url( admin_url( 'admin-ajax.php' ) ),
 	'nonce'     => wp_create_nonce( 'hikmah_dashboard_nonce' ),
 	'userId'    => (int) $user->ID,
-	'exportUrl' => admin_url( 'admin-post.php' ) . '?action=hikmah_dashboard_download_export&_wpnonce=' . wp_create_nonce( 'hikmah_dashboard_nonce' ),
+	'exportUrl' => \Hikmah_Login\Helpers\Helper::relative_url( admin_url( 'admin-post.php' ) ) . '?action=hikmah_dashboard_download_export&_wpnonce=' . wp_create_nonce( 'hikmah_dashboard_nonce' ),
 	'i18n'      => [
 		'confirmSessionRevoke' => __( 'Revoke this session?', 'hikmah-login' ),
 		'confirmLogoutAll'     => __( 'Log out from all other devices?', 'hikmah-login' ),

@@ -1213,3 +1213,119 @@ body.hikmah-login-page:not(.hikmah-fixed-bg)::before {
     font-size: 14px;
     margin: 0 0 20px;
 }
+
+/* =============================================
+   21. PREMIUM ENHANCEMENTS (v2.1.0)
+   Ambient glow, gradient accent, refined depth.
+   Token-aware: follows dark mode & customizer values.
+   ============================================= */
+
+/* Brand halo + subtle elevation lift for the auth card */
+.hikmah-login-wrapper {
+    box-shadow: var(--hikmah-shadow-lg);
+    box-shadow:
+        var(--hikmah-shadow-lg),
+        0 0 0 1px rgba(99, 102, 241, 0.06),
+        0 0 60px -18px color-mix(in srgb, var(--hikmah-primary) 45%, transparent);
+}
+
+/* Gradient accent bar across the card top */
+.hikmah-login-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: calc(var(--hikmah-card-radius) - 1px) calc(var(--hikmah-card-radius) - 1px) 0 0;
+    background: var(--hikmah-primary-gradient);
+    opacity: 0.9;
+    pointer-events: none;
+}
+
+/* Gentle entrance animation */
+@keyframes hikmah-card-enter {
+    from { opacity: 0; transform: translateY(18px) scale(0.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.hikmah-login-wrapper {
+    animation: hikmah-card-enter 0.45s ease both;
+}
+
+/* Refined primary button interactions */
+.hikmah-btn-primary {
+    transition:
+        transform var(--hikmah-transition),
+        box-shadow var(--hikmah-transition),
+        background var(--hikmah-transition),
+        color var(--hikmah-transition),
+        border-color var(--hikmah-transition);
+}
+
+.hikmah-btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.hikmah-btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.hikmah-btn-primary:focus-visible {
+    outline-color: var(--hikmah-primary);
+    box-shadow: var(--hikmah-focus-ring);
+}
+
+/* Social buttons — premium hover lift */
+.hikmah-social-btn {
+    transition:
+        transform var(--hikmah-transition-fast),
+        box-shadow var(--hikmah-transition-fast),
+        border-color var(--hikmah-transition-fast),
+        background var(--hikmah-transition-fast);
+}
+
+.hikmah-social-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--hikmah-shadow);
+}
+
+/* Form header logo — soft halo so logos pop on any theme */
+.hikmah-form-logo img {
+    border-radius: 16px;
+    box-shadow: 0 8px 24px -12px rgba(79, 70, 229, 0.35);
+}
+
+.hikmah-form-logo img {
+    box-shadow: 0 8px 24px -12px color-mix(in srgb, var(--hikmah-primary) 40%, transparent);
+}
+
+/* Inputs — subtle brand glow on focus (keeps focus ring for WCAG) */
+.hikmah-input:focus {
+    box-shadow:
+        var(--hikmah-focus-ring),
+        0 0 24px -12px var(--hikmah-primary);
+}
+
+/* Dark mode halo tint */
+.hikmah-login-wrapper.hikmah-dark-mode,
+body.hikmah-dark-mode .hikmah-login-wrapper,
+.hikmah-dark-mode .hikmah-login-wrapper {
+    box-shadow: var(--hikmah-shadow-lg);
+    box-shadow:
+        var(--hikmah-shadow-lg),
+        0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 0 70px -18px color-mix(in srgb, var(--hikmah-primary) 55%, transparent);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .hikmah-login-wrapper {
+        animation: none;
+    }
+
+    .hikmah-btn-primary:hover:not(:disabled),
+    .hikmah-social-btn:hover:not(:disabled) {
+        transform: none;
+    }
+}

@@ -156,8 +156,8 @@ class Assets {
     private function get_localized_data() {
 
         $data = [
-            'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
-            'restUrl'       => rest_url( 'hikmah-login/v1/' ),
+            'ajaxUrl'       => Helper::relative_url( admin_url( 'admin-ajax.php' ) ),
+            'restUrl'       => Helper::relative_url( rest_url( 'hikmah-login/v1/' ) ),
             'nonce'         => wp_create_nonce( 'hikmah_login_nonce' ),
             'loginNonce'    => wp_create_nonce( 'hikmah_login_action' ),
             'registerNonce' => wp_create_nonce( 'hikmah_register_action' ),
@@ -297,7 +297,7 @@ class Assets {
 
                     btn.prop('disabled', true).text('" . esc_js( __( 'Sending...', 'hikmah-login' ) ) . "');
 
-                    \$.post('" . esc_js( admin_url( 'admin-ajax.php' ) ) . "', {
+                    \$.post('" . esc_js( Helper::relative_url( admin_url( 'admin-ajax.php' ) ) ) . "', {
                         action: 'hikmah_admin_resend_verification',
                         nonce: '" . esc_js( $admin_nonce ) . "',
                         user_id: userId
@@ -350,7 +350,7 @@ class Assets {
 
         // Localize admin data
         wp_localize_script( 'hikmah-admin-script', 'hikmahAdmin', [
-            'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+            'ajaxUrl'  => Helper::relative_url( admin_url( 'admin-ajax.php' ) ),
             'nonce'    => wp_create_nonce( 'hikmah_admin_nonce' ),
             'pluginUrl' => HIKMAH_LOGIN_URL,
             'i18n'     => [

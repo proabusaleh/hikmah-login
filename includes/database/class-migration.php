@@ -282,6 +282,24 @@ class Migration {
                 UNIQUE KEY idx_provider_uid (provider, provider_uid),
                 KEY idx_user_id (user_id)
             ) {$charset_collate};",
+
+            "CREATE TABLE IF NOT EXISTS {$prefix}sessions (
+                id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+                user_id BIGINT(20) UNSIGNED NOT NULL,
+                token VARCHAR(255) NOT NULL,
+                ip_address VARCHAR(45) DEFAULT NULL,
+                user_agent TEXT DEFAULT NULL,
+                device_type VARCHAR(20) DEFAULT NULL,
+                device_name VARCHAR(100) DEFAULT NULL,
+                browser VARCHAR(50) DEFAULT NULL,
+                os VARCHAR(50) DEFAULT NULL,
+                login_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                last_activity DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                KEY idx_user_id (user_id),
+                KEY idx_token (token),
+                KEY idx_last_activity (last_activity)
+            ) {$charset_collate};",
         ];
 
         foreach ( $tables as $sql ) {

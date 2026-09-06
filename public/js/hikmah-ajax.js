@@ -145,7 +145,9 @@
                         },
 
                         error(xhr, textStatus, errorThrown) {
-                            if (retryCount < opts.retries && textStatus !== 'abort') {
+                            const serverError = xhr.responseJSON;
+
+                            if (!serverError && retryCount < opts.retries && textStatus !== 'abort') {
                                 const delay = opts.retryDelay * Math.pow(2, retryCount);
                                 setTimeout(() => attempt(retryCount + 1), delay);
                                 return;
@@ -153,11 +155,13 @@
 
                             reject({
                                 success: false,
-                                message: textStatus === 'timeout'
-                                    ? 'Request timed out. Please try again.'
-                                    : 'Network error. Please check your connection.',
-                                code: 'network_error',
-                                data: {}
+                                message: serverError && serverError.message
+                                    ? serverError.message
+                                    : (textStatus === 'timeout'
+                                        ? 'Request timed out. Please try again.'
+                                        : 'Network error. Please check your connection.'),
+                                code: serverError && serverError.code ? serverError.code : 'network_error',
+                                data: serverError && serverError.data ? serverError.data : {}
                             });
                         },
 

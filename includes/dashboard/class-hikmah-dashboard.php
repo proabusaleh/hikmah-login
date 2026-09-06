@@ -763,7 +763,7 @@ class Hikmah_Dashboard {
 
         // Localize dashboard data
         wp_localize_script('hikmah-dashboard', 'hikmahDashboard', [
-            'ajaxUrl'     => admin_url('admin-ajax.php'),
+            'ajaxUrl'     => \Hikmah_Login\Helpers\Helper::relative_url(admin_url('admin-ajax.php')),
             'nonce'       => wp_create_nonce('hikmah_dashboard_nonce'),
             'currentTab'  => $this->get_current_tab(),
             'userId'      => get_current_user_id(),

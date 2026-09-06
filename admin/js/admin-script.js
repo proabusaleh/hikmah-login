@@ -7,7 +7,7 @@
  * - Confirmations for destructive actions
  *
  * @package Hikmah_Login
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 (function ($) {
@@ -20,10 +20,13 @@
             this.bindAjaxForms();
             this.bindLogDeletion();
             this.bindResetConfirmation();
+            this.bindRangeOutputs();
+            this.bindToastDismiss();
         },
 
         bindAjaxForms: function () {
-            var self = this;
+            var self = this,
+                i18n = self.config.i18n || {};
             $(document).on('click', '.hikmah-save-button', function (e) {
                 var $btn = $(this),
                     $form = $btn.closest('form'),
@@ -35,16 +38,16 @@
                     return;
                 }
 
-                $btn.prop('disabled', true).text(self.config.i18n.saving || 'Saving...');
+                $btn.prop('disabled', true).text(i18n.saving || 'Saving...');
 
                 $.post(
                     $form.attr('action'),
                     $form.serialize() + '&_wpnonce=' + self.config.nonce,
                     function (response) {
-                        $btn.prop('disabled', false).text(self.config.i18n.saved || 'Settings saved!');
+                        $btn.prop('disabled', false).text(i18n.saved || 'Settings saved!');
                         if ($notice.length) {
                             $notice.removeClass('notice-error').addClass('notice-success')
-                                .text(self.config.i18n.saved || 'Settings saved!').show();
+                                .text(i18n.saved || 'Settings saved!').show();
                         }
                         setTimeout(function () {
                             $btn.text($btn.data('originalText') || 'Save Settings');
@@ -57,7 +60,7 @@
                     $btn.prop('disabled', false);
                     if ($notice.length) {
                         $notice.removeClass('notice-success').addClass('notice-error')
-                            .text(self.config.i18n.error || 'Error saving settings.').show();
+                            .text(i18n.error || 'Error saving settings.').show();
                     }
                 });
 
@@ -68,7 +71,8 @@
         },
 
         bindLogDeletion: function () {
-            var self = this;
+            var self = this,
+                i18n = self.config.i18n || {};
             $(document).on('click', '.hikmah-delete-log', function (e) {
                 e.preventDefault();
 
@@ -80,7 +84,7 @@
                     return;
                 }
 
-                if (!window.confirm(self.config.i18n.confirmDelete || 'Are you sure you want to delete this log?')) {
+                if (!window.confirm(i18n.confirmDelete || 'Are you sure you want to delete this log?')) {
                     return;
                 }
 
@@ -103,12 +107,44 @@
         },
 
         bindResetConfirmation: function () {
-            var self = this;
+            var self = this,
+                i18n = self.config.i18n || {};
             $(document).on('click', '.hikmah-reset-settings', function (e) {
-                if (!window.confirm(self.config.i18n.confirmReset || 'Are you sure you want to reset all settings?')) {
+                if (!window.confirm(i18n.confirmReset || 'Are you sure you want to reset all settings?')) {
                     e.preventDefault();
                 }
             });
+        },
+
+        bindRangeOutputs: function () {
+            $(document).on('input', '.hikmah-admin-wrap input[type="range"]', function () {
+                var id = this.id,
+                    $out;
+
+                if (id) {
+                    $out = $('#' + id + '-val');
+                }
+                if (!$out || !$out.length) {
+                    $out = $(this).next('.hikmah-hint');
+                }
+
+                this.setAttribute('title', this.value);
+
+                if ($out && $out.length) {
+                    var suffix = $out.data('suffix') || 'px';
+                    $out.text(this.value + suffix);
+                }
+            });
+        },
+
+        bindToastDismiss: function () {
+            $(document).on('click', '.hikmah-toast', function () {
+                $(this).fadeOut();
+            });
+
+            setTimeout(function () {
+                $('.hikmah-admin-wrap .hikmah-toast').fadeOut(400);
+            }, 5000);
         }
     };
 

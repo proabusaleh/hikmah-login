@@ -83,6 +83,16 @@ class Admin_Menu {
             'hikmah-login-security',
             [ $this, 'render_security_dashboard' ]
         );
+
+        // Updates sub-menu (GitHub releases updater)
+        add_submenu_page(
+            'hikmah-login',
+            __( 'Updates', 'hikmah-login' ),
+            __( 'Updates', 'hikmah-login' ),
+            self::CAPABILITY,
+            'hikmah-login-updates',
+            [ $this, 'render_updates' ]
+        );
     }
 
     /**
@@ -111,6 +121,13 @@ class Admin_Menu {
      */
     public function render_security_dashboard() {
         $this->load_view( 'security-dashboard' );
+    }
+
+    /**
+     * Render the updates view.
+     */
+    public function render_updates() {
+        $this->load_view( 'updates' );
     }
 
     /**

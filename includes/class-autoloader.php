@@ -71,6 +71,7 @@ class Hikmah_Login_Autoloader {
             'Hikmah_Login\\Admin'      => $this->base_dir . 'admin/',
             'Hikmah_Login\\Database'   => $this->base_dir . 'database/',
             'Hikmah_Login\\Helpers'    => $this->base_dir . 'helpers/',
+            'Hikmah_Login\\Updater'    => $this->base_dir . 'updater/',
             'Hikmah_Login'             => $this->base_dir,
         ];
     }

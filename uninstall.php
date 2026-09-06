@@ -41,6 +41,7 @@ function hikmah_login_uninstall() {
         $prefix . 'email_tokens',
         $prefix . 'two_factor',
         $prefix . 'social_profiles',
+        $prefix . 'sessions',
     ];
 
     foreach ( $tables as $table ) {

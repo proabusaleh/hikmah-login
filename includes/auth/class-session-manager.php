@@ -44,7 +44,7 @@ class Session_Manager {
     private function __construct() {
 
         global $wpdb;
-        $this->table = $wpdb->prefix . 'hikmah_sessions';
+        $this->table = $wpdb->prefix . HIKMAH_LOGIN_DB_PREFIX . 'sessions';
 
         $this->register_hooks();
     }

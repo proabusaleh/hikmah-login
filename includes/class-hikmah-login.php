@@ -182,7 +182,11 @@ final class Hikmah_Login {
              * frontend stylesheet is generated lazily from the Assets class
              * (output_custom_css) so it also works on non-admin requests.
              */
+            // Admin UI settings (Custom UI)
             $this->modules['admin_ui_settings'] = Admin\Admin_UI_Settings::get_instance();
+
+            // GitHub releases auto-updater + Updates admin page.
+            $this->modules['updater'] = Updater\Github_Updater::get_instance();
 
             // Future admin modules:
             // $this->modules['admin_settings'] = Admin\Admin_Settings::get_instance();
@@ -341,8 +345,8 @@ final class Hikmah_Login {
             '<a href="' . admin_url( 'admin.php?page=hikmah-login' ) . '">'
                 . esc_html__( 'Settings', 'hikmah-login' )
                 . '</a>',
-            '<a href="' . admin_url( 'admin.php?page=hikmah-login-logs' ) . '">'
-                . esc_html__( 'Login Logs', 'hikmah-login' )
+            '<a href="' . admin_url( 'admin.php?page=hikmah-login-updates' ) . '">'
+                . esc_html__( 'Updates', 'hikmah-login' )
                 . '</a>',
         ];
 
@@ -363,11 +367,14 @@ final class Hikmah_Login {
         }
 
         $extra_links = [
-            '<a href="https://example.com/docs/hikmah-login" target="_blank">'
+            '<a href="https://github.com/proabusaleh/hikmah-login" target="_blank" rel="noopener">'
                 . esc_html__( 'Documentation', 'hikmah-login' )
                 . '</a>',
-            '<a href="https://example.com/support" target="_blank">'
-                . esc_html__( 'Support', 'hikmah-login' )
+            '<a href="https://github.com/proabusaleh/hikmah-login/issues" target="_blank" rel="noopener">'
+                . esc_html__( 'Report an Issue', 'hikmah-login' )
+                . '</a>',
+            '<a href="https://github.com/proabusaleh/hikmah-login/releases" target="_blank" rel="noopener">'
+                . esc_html__( 'Changelog', 'hikmah-login' )
                 . '</a>',
         ];
 

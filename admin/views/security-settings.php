@@ -198,38 +198,48 @@ $options = [
 ];
 
 function __hikmah_checkbox( $name, $checked ) {
-    return '<input type="checkbox" id="' . esc_attr( $name ) . '" name="' . esc_attr( $name ) . '" value="1"' . checked( $checked, 'yes', false ) . '>';
+    return '<label class="hikmah-toggle"><input type="checkbox" id="' . esc_attr( $name ) . '" name="' . esc_attr( $name ) . '" value="1"' . checked( $checked, 'yes', false ) . '><span class="hikmah-toggle__track"><span class="hikmah-toggle__thumb"></span></span></label>';
 }
 ?>
-<div class="wrap" style="padding: 0 12px;">
-    <h1 style="font-size: 23px; font-weight: 600;">⚙️ <?php esc_html_e( 'Hikmah Login — Security Settings', 'hikmah-login' ); ?></h1>
-    <p class="description"><?php esc_html_e( 'Configure brute force protection, CAPTCHA, IP lists, and hardening. Most features take effect immediately.', 'hikmah-login' ); ?></p>
+<div class="wrap hikmah-admin-wrap">
+
+    <div class="hikmah-hero">
+        <div class="hikmah-hero__inner">
+            <h1 class="hikmah-hero__title"><span>⚙️</span> <?php esc_html_e( 'Security Settings', 'hikmah-login' ); ?></h1>
+            <p class="hikmah-hero__subtitle"><?php esc_html_e( 'Configure brute force protection, CAPTCHA, IP lists, and hardening. Most features take effect immediately.', 'hikmah-login' ); ?></p>
+            <div class="hikmah-hero__actions">
+                <a class="hikmah-btn hikmah-btn--light" href="<?php echo esc_url( admin_url( 'admin.php?page=hikmah-login' ) ); ?>">📊 <?php esc_html_e( 'Back to Dashboard', 'hikmah-login' ); ?></a>
+                <a class="hikmah-btn hikmah-btn--light" href="<?php echo esc_url( admin_url( 'admin.php?page=hikmah-login-security' ) ); ?>">📋 <?php esc_html_e( 'View Audit Log', 'hikmah-login' ); ?></a>
+            </div>
+        </div>
+    </div>
 
     <?php if ( $settings_saved ) : ?>
-        <div class="notice notice-success is-dismissible" style="margin:16px 0;">
-            <p><?php esc_html_e( 'Security settings saved.', 'hikmah-login' ); ?></p>
-        </div>
+        <div class="hikmah-toast"><span>✅</span> <?php esc_html_e( 'Security settings saved.', 'hikmah-login' ); ?></div>
     <?php endif; ?>
 
     <form method="post" action="">
         <?php wp_nonce_field( 'hikmah_security_settings_save', 'hikmah_security_settings_nonce' ); ?>
 
         <!-- CAPTCHA -->
-        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px 24px;margin:20px 0;">
-            <h2 style="margin:0 0 4px;">🤖 <?php esc_html_e( 'CAPTCHA Protection', 'hikmah-login' ); ?></h2>
-            <p class="description" style="margin:0 0 16px;"><?php esc_html_e( 'Protect login, registration and password reset forms from automated abuse.', 'hikmah-login' ); ?></p>
-
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><label for="hikmah_captcha_enabled"><?php esc_html_e( 'Enable CAPTCHA', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_captcha_enabled', $options['hikmah_captcha_enabled'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'Adds CAPTCHA to the login, register and forgot password forms.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_captcha_type"><?php esc_html_e( 'Provider', 'hikmah-login' ); ?></label></th>
-                    <td>
+        <div class="hikmah-card">
+            <div class="hikmah-card__head">
+                <div>
+                    <h2 class="hikmah-card__title"><span class="hikmah-icon-chip">🤖</span> <?php esc_html_e( 'CAPTCHA Protection', 'hikmah-login' ); ?></h2>
+                    <p class="hikmah-card__desc"><?php esc_html_e( 'Protect login, registration and password reset forms from automated abuse.', 'hikmah-login' ); ?></p>
+                </div>
+            </div>
+            <div class="hikmah-card__body">
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_captcha_enabled', $options['hikmah_captcha_enabled'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_captcha_enabled"><?php esc_html_e( 'Enable CAPTCHA', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'Adds CAPTCHA to the login, register and forgot password forms.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_captcha_type"><?php esc_html_e( 'Provider', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control">
                         <select id="hikmah_captcha_type" name="hikmah_captcha_type">
                             <?php foreach ( Captcha::get_providers() as $value => $label ) : ?>
                                 <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $options['hikmah_captcha_type'], $value ); ?>>
@@ -237,222 +247,262 @@ function __hikmah_checkbox( $name, $checked ) {
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_recaptcha_site_key"><?php esc_html_e( 'Site Key', 'hikmah-login' ); ?></label></th>
-                    <td><input type="text" id="hikmah_recaptcha_site_key" name="hikmah_recaptcha_site_key" class="regular-text" value="<?php echo esc_attr( $options['hikmah_recaptcha_site_key'] ); ?>"></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_recaptcha_secret_key"><?php esc_html_e( 'Secret Key', 'hikmah-login' ); ?></label></th>
-                    <td><input type="text" id="hikmah_recaptcha_secret_key" name="hikmah_recaptcha_secret_key" class="regular-text" value="<?php echo esc_attr( $options['hikmah_recaptcha_secret_key'] ); ?>"></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_recaptcha_min_score"><?php esc_html_e( 'Min. Score (v3)', 'hikmah-login' ); ?></label></th>
-                    <td>
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_recaptcha_site_key"><?php esc_html_e( 'Site Key', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control"><input type="text" id="hikmah_recaptcha_site_key" name="hikmah_recaptcha_site_key" class="regular-text" value="<?php echo esc_attr( $options['hikmah_recaptcha_site_key'] ); ?>"></span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_recaptcha_secret_key"><?php esc_html_e( 'Secret Key', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control"><input type="text" id="hikmah_recaptcha_secret_key" name="hikmah_recaptcha_secret_key" class="regular-text" value="<?php echo esc_attr( $options['hikmah_recaptcha_secret_key'] ); ?>"></span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_recaptcha_min_score"><?php esc_html_e( 'Min. Score (v3)', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control">
                         <input type="number" id="hikmah_recaptcha_min_score" name="hikmah_recaptcha_min_score" min="0" max="1" step="0.1" value="<?php echo esc_attr( $options['hikmah_recaptcha_min_score'] ); ?>">
-                        <span class="description"><?php esc_html_e( 'Reject reCAPTCHA v3 tokens below this score (0.0 – 1.0).', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_captcha_theme"><?php esc_html_e( 'Widget Theme', 'hikmah-login' ); ?></label></th>
-                    <td>
+                        <span class="hikmah-hint"><?php esc_html_e( 'Reject reCAPTCHA v3 tokens below this score (0.0 – 1.0).', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_captcha_theme"><?php esc_html_e( 'Widget Theme', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control">
                         <select id="hikmah_captcha_theme" name="hikmah_captcha_theme">
                             <option value="light" <?php selected( $options['hikmah_captcha_theme'], 'light' ); ?>><?php esc_html_e( 'Light', 'hikmah-login' ); ?></option>
                             <option value="dark" <?php selected( $options['hikmah_captcha_theme'], 'dark' ); ?>><?php esc_html_e( 'Dark', 'hikmah-login' ); ?></option>
                         </select>
-                    </td>
-                </tr>
-            </table>
+                    </span>
+                </div>
+            </div>
         </div>
 
         <!-- Two-Factor Authentication -->
-        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px 24px;margin:20px 0;">
-            <h2 style="margin:0 0 4px;">🔐 <?php esc_html_e( 'Two-Factor Authentication', 'hikmah-login' ); ?></h2>
-            <p class="description" style="margin:0 0 16px;"><?php esc_html_e( 'Enable email OTP / authenticator-app verification with single-use backup codes. Users manage their own 2FA on their profile.', 'hikmah-login' ); ?></p>
-
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><label for="hikmah_2fa_enabled"><?php esc_html_e( 'Enable 2FA', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_2fa_enabled', $options['hikmah_2fa_enabled'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'Allows users and administrators to enable two-factor authentication.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-            </table>
+        <div class="hikmah-card">
+            <div class="hikmah-card__head">
+                <div>
+                    <h2 class="hikmah-card__title"><span class="hikmah-icon-chip hikmah-icon-chip--violet">🔐</span> <?php esc_html_e( 'Two-Factor Authentication', 'hikmah-login' ); ?></h2>
+                    <p class="hikmah-card__desc"><?php esc_html_e( 'Enable email OTP / authenticator-app verification with single-use backup codes. Users manage their own 2FA on their profile.', 'hikmah-login' ); ?></p>
+                </div>
+            </div>
+            <div class="hikmah-card__body">
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_2fa_enabled', $options['hikmah_2fa_enabled'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_2fa_enabled"><?php esc_html_e( 'Enable 2FA', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'Allows users and administrators to enable two-factor authentication.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+            </div>
         </div>
 
         <!-- Brute Force -->
-        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px 24px;margin:20px 0;">
-            <h2 style="margin:0 0 4px;">🛡️ <?php esc_html_e( 'Brute Force Protection', 'hikmah-login' ); ?></h2>
-            <p class="description" style="margin:0 0 16px;"><?php esc_html_e( 'Lock out attackers after repeated failed login attempts (per-IP, per-username, and combined).', 'hikmah-login' ); ?></p>
-
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><label for="hikmah_brute_force_enabled"><?php esc_html_e( 'Enable Brute Force Protection', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_brute_force_enabled', $options['hikmah_brute_force_enabled'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'Recommended. Enabled by default.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_max_login_attempts"><?php esc_html_e( 'Max Attempts', 'hikmah-login' ); ?></label></th>
-                    <td><input type="number" id="hikmah_max_login_attempts" name="hikmah_max_login_attempts" min="1" max="50" value="<?php echo esc_attr( $options['hikmah_max_login_attempts'] ); ?>"></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_lockout_duration"><?php esc_html_e( 'Lockout Duration (minutes)', 'hikmah-login' ); ?></label></th>
-                    <td><input type="number" id="hikmah_lockout_duration" name="hikmah_lockout_duration" min="1" max="1440" value="<?php echo esc_attr( $options['hikmah_lockout_duration'] ); ?>"></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_progressive_lockout"><?php esc_html_e( 'Progressive Lockout', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_progressive_lockout', $options['hikmah_progressive_lockout'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'Double the lockout duration each time the threshold is re-crossed.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_max_lockout_multiplier"><?php esc_html_e( 'Max Lockout Multiplier', 'hikmah-login' ); ?></label></th>
-                    <td><input type="number" id="hikmah_max_lockout_multiplier" name="hikmah_max_lockout_multiplier" min="1" max="100" value="<?php echo esc_attr( $options['hikmah_max_lockout_multiplier'] ); ?>"></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_auto_blacklist"><?php esc_html_e( 'Auto-Blacklist', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_auto_blacklist', $options['hikmah_auto_blacklist'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'Permanently blacklist IPs that exceed the threshold below within 24 hours.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_blacklist_threshold"><?php esc_html_e( 'Blacklist Threshold', 'hikmah-login' ); ?></label></th>
-                    <td><input type="number" id="hikmah_blacklist_threshold" name="hikmah_blacklist_threshold" min="1" value="<?php echo esc_attr( $options['hikmah_blacklist_threshold'] ); ?>"></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_security_alerts"><?php esc_html_e( 'Email Alerts', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_security_alerts', $options['hikmah_security_alerts'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'Send an email when suspicious activity is detected.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_alert_threshold"><?php esc_html_e( 'Alert Threshold', 'hikmah-login' ); ?></label></th>
-                    <td><input type="number" id="hikmah_alert_threshold" name="hikmah_alert_threshold" min="1" value="<?php echo esc_attr( $options['hikmah_alert_threshold'] ); ?>"></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_security_alert_email"><?php esc_html_e( 'Alert Email', 'hikmah-login' ); ?></label></th>
-                    <td><input type="email" id="hikmah_security_alert_email" name="hikmah_security_alert_email" class="regular-text" value="<?php echo esc_attr( $options['hikmah_security_alert_email'] ); ?>"></td>
-                </tr>
-            </table>
+        <div class="hikmah-card">
+            <div class="hikmah-card__head">
+                <div>
+                    <h2 class="hikmah-card__title"><span class="hikmah-icon-chip hikmah-icon-chip--green">🛡️</span> <?php esc_html_e( 'Brute Force Protection', 'hikmah-login' ); ?></h2>
+                    <p class="hikmah-card__desc"><?php esc_html_e( 'Lock out attackers after repeated failed login attempts (per-IP, per-username, and combined).', 'hikmah-login' ); ?></p>
+                </div>
+            </div>
+            <div class="hikmah-card__body">
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_brute_force_enabled', $options['hikmah_brute_force_enabled'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_brute_force_enabled"><?php esc_html_e( 'Enable Brute Force Protection', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'Recommended. Enabled by default.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_max_login_attempts"><?php esc_html_e( 'Max Attempts', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control">
+                        <input type="number" id="hikmah_max_login_attempts" name="hikmah_max_login_attempts" min="1" max="50" value="<?php echo esc_attr( $options['hikmah_max_login_attempts'] ); ?>">
+                        <span class="hikmah-hint"><?php esc_html_e( 'Allowed failures before a lockout triggers', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_lockout_duration"><?php esc_html_e( 'Lockout Duration (minutes)', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control">
+                        <input type="number" id="hikmah_lockout_duration" name="hikmah_lockout_duration" min="1" max="1440" value="<?php echo esc_attr( $options['hikmah_lockout_duration'] ); ?>">
+                    </span>
+                </div>
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_progressive_lockout', $options['hikmah_progressive_lockout'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_progressive_lockout"><?php esc_html_e( 'Progressive Lockout', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'Double the lockout duration each time the threshold is re-crossed.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_max_lockout_multiplier"><?php esc_html_e( 'Max Lockout Multiplier', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control">
+                        <input type="number" id="hikmah_max_lockout_multiplier" name="hikmah_max_lockout_multiplier" min="1" max="100" value="<?php echo esc_attr( $options['hikmah_max_lockout_multiplier'] ); ?>">
+                    </span>
+                </div>
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_auto_blacklist', $options['hikmah_auto_blacklist'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_auto_blacklist"><?php esc_html_e( 'Auto-Blacklist', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'Permanently blacklist IPs that exceed the threshold below within 24 hours.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_blacklist_threshold"><?php esc_html_e( 'Blacklist Threshold', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control">
+                        <input type="number" id="hikmah_blacklist_threshold" name="hikmah_blacklist_threshold" min="1" value="<?php echo esc_attr( $options['hikmah_blacklist_threshold'] ); ?>">
+                        <span class="hikmah-hint"><?php esc_html_e( 'Failures within 24h that trigger a permanent blacklist', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_security_alerts', $options['hikmah_security_alerts'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_security_alerts"><?php esc_html_e( 'Email Alerts', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'Send an email when suspicious activity is detected.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_alert_threshold"><?php esc_html_e( 'Alert Threshold', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control">
+                        <input type="number" id="hikmah_alert_threshold" name="hikmah_alert_threshold" min="1" value="<?php echo esc_attr( $options['hikmah_alert_threshold'] ); ?>">
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_security_alert_email"><?php esc_html_e( 'Alert Email', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control">
+                        <input type="email" id="hikmah_security_alert_email" name="hikmah_security_alert_email" class="regular-text" value="<?php echo esc_attr( $options['hikmah_security_alert_email'] ); ?>">
+                    </span>
+                </div>
+            </div>
         </div>
 
         <!-- IP Lists -->
-        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px 24px;margin:20px 0;">
-            <h2 style="margin:0 0 4px;">🌐 <?php esc_html_e( 'IP Blacklist / Whitelist', 'hikmah-login' ); ?></h2>
-            <p class="description" style="margin:0 0 16px;"><?php esc_html_e( 'One entry per line. Supports exact IPs, CIDR ranges (192.168.1.0/24) and wildcards (192.168.1.*). Use # for comments.', 'hikmah-login' ); ?></p>
-
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><label for="hikmah_ip_whitelist_enabled"><?php esc_html_e( 'Enable Whitelist', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_ip_whitelist_enabled', $options['hikmah_ip_whitelist_enabled'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'Whitelisted IPs bypass brute force restrictions.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_ip_whitelist"><?php esc_html_e( 'Whitelist', 'hikmah-login' ); ?></label></th>
-                    <td><textarea id="hikmah_ip_whitelist" name="hikmah_ip_whitelist" rows="4" class="large-text code"><?php echo esc_textarea( $options['hikmah_ip_whitelist'] ); ?></textarea></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_ip_blacklist"><?php esc_html_e( 'Blacklist', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <textarea id="hikmah_ip_blacklist" name="hikmah_ip_blacklist" rows="4" class="large-text code"><?php echo esc_textarea( $options['hikmah_ip_blacklist'] ); ?></textarea>
-                        <p class="description"><?php esc_html_e( 'Blocked IPs are rejected before login. They can also be added automatically by Auto-Blacklist.', 'hikmah-login' ); ?></p>
-                    </td>
-                </tr>
-            </table>
+        <div class="hikmah-card">
+            <div class="hikmah-card__head">
+                <div>
+                    <h2 class="hikmah-card__title"><span class="hikmah-icon-chip hikmah-icon-chip--indigo">🌐</span> <?php esc_html_e( 'IP Blacklist / Whitelist', 'hikmah-login' ); ?></h2>
+                    <p class="hikmah-card__desc"><?php esc_html_e( 'One entry per line. Supports exact IPs, CIDR ranges (192.168.1.0/24) and wildcards (192.168.1.*). Use # for comments.', 'hikmah-login' ); ?></p>
+                </div>
+            </div>
+            <div class="hikmah-card__body">
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_ip_whitelist_enabled', $options['hikmah_ip_whitelist_enabled'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_ip_whitelist_enabled"><?php esc_html_e( 'Enable Whitelist', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'Whitelisted IPs bypass brute force restrictions.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_ip_whitelist"><?php esc_html_e( 'Whitelist', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control">
+                        <textarea id="hikmah_ip_whitelist" name="hikmah_ip_whitelist" rows="4" class="large-text code" style="width:100%;"><?php echo esc_textarea( $options['hikmah_ip_whitelist'] ); ?></textarea>
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_ip_blacklist"><?php esc_html_e( 'Blacklist', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control">
+                        <textarea id="hikmah_ip_blacklist" name="hikmah_ip_blacklist" rows="4" class="large-text code" style="width:100%;"><?php echo esc_textarea( $options['hikmah_ip_blacklist'] ); ?></textarea>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'Blocked IPs are rejected before login. They can also be added automatically by Auto-Blacklist.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+            </div>
         </div>
 
         <!-- Hardening -->
-        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px 24px;margin:20px 0;">
-            <h2 style="margin:0 0 4px;">🛡️ <?php esc_html_e( 'Security Hardening', 'hikmah-login' ); ?></h2>
-            <p class="description" style="margin:0 0 16px;"><?php esc_html_e( 'Reduce the WordPress attack surface (headers, XML-RPC, enumeration, uploads).', 'hikmah-login' ); ?></p>
-
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><label for="hikmah_security_headers_enabled"><?php esc_html_e( 'Security Headers', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_security_headers_enabled', $options['hikmah_security_headers_enabled'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_permissions_policy"><?php esc_html_e( 'Permissions-Policy', 'hikmah-login' ); ?></label></th>
-                    <td><input type="text" id="hikmah_permissions_policy" name="hikmah_permissions_policy" class="large-text code" value="<?php echo esc_attr( $options['hikmah_permissions_policy'] ); ?>"></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_content_security_policy"><?php esc_html_e( 'Content-Security-Policy', 'hikmah-login' ); ?></label></th>
-                    <td><textarea id="hikmah_content_security_policy" name="hikmah_content_security_policy" rows="2" class="large-text code"><?php echo esc_textarea( $options['hikmah_content_security_policy'] ); ?></textarea></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_disable_xmlrpc"><?php esc_html_e( 'Disable XML-RPC', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_disable_xmlrpc', $options['hikmah_disable_xmlrpc'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'Prevents DDoS/brute-force amplification via pingbacks.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_disable_rest_user_enumeration"><?php esc_html_e( 'Block REST User Enumeration', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_disable_rest_user_enumeration', $options['hikmah_disable_rest_user_enumeration'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'Blocks /wp-json/wp/v2/users and hides emails for non-admins.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_hide_login_errors"><?php esc_html_e( 'Hide Login Errors', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_hide_login_errors', $options['hikmah_hide_login_errors'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'Generic message instead of revealing whether a username exists.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_restrict_uploads"><?php esc_html_e( 'Restrict Uploads', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_restrict_uploads', $options['hikmah_restrict_uploads'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'Whitelist allowed MIME types and hard-block PHP uploads.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_allowed_upload_mimes"><?php esc_html_e( 'Allowed MIME Extensions', 'hikmah-login' ); ?></label></th>
-                    <td><input type="text" id="hikmah_allowed_upload_mimes" name="hikmah_allowed_upload_mimes" class="large-text code" value="<?php echo esc_attr( $options['hikmah_allowed_upload_mimes'] ); ?>"></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="hikmah_disable_application_passwords"><?php esc_html_e( 'Disable Application Passwords', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_disable_application_passwords', $options['hikmah_disable_application_passwords'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'Reduces credential abuse risk on sites that do not use the REST API.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-            </table>
+        <div class="hikmah-card">
+            <div class="hikmah-card__head">
+                <div>
+                    <h2 class="hikmah-card__title"><span class="hikmah-icon-chip hikmah-icon-chip--slate">🛡️</span> <?php esc_html_e( 'Security Hardening', 'hikmah-login' ); ?></h2>
+                    <p class="hikmah-card__desc"><?php esc_html_e( 'Reduce the WordPress attack surface (headers, XML-RPC, enumeration, uploads).', 'hikmah-login' ); ?></p>
+                </div>
+            </div>
+            <div class="hikmah-card__body">
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_security_headers_enabled', $options['hikmah_security_headers_enabled'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_security_headers_enabled"><?php esc_html_e( 'Security Headers', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_permissions_policy"><?php esc_html_e( 'Permissions-Policy', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control" style="width:100%;max-width:640px;">
+                        <input type="text" id="hikmah_permissions_policy" name="hikmah_permissions_policy" class="large-text code" style="width:100%;" value="<?php echo esc_attr( $options['hikmah_permissions_policy'] ); ?>">
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_content_security_policy"><?php esc_html_e( 'Content-Security-Policy', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control" style="width:100%;max-width:640px;">
+                        <textarea id="hikmah_content_security_policy" name="hikmah_content_security_policy" rows="2" class="large-text code" style="width:100%;"><?php echo esc_textarea( $options['hikmah_content_security_policy'] ); ?></textarea>
+                    </span>
+                </div>
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_disable_xmlrpc', $options['hikmah_disable_xmlrpc'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_disable_xmlrpc"><?php esc_html_e( 'Disable XML-RPC', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'Prevents DDoS/brute-force amplification via pingbacks.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_disable_rest_user_enumeration', $options['hikmah_disable_rest_user_enumeration'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_disable_rest_user_enumeration"><?php esc_html_e( 'Block REST User Enumeration', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'Blocks /wp-json/wp/v2/users and hides emails for non-admins.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_hide_login_errors', $options['hikmah_hide_login_errors'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_hide_login_errors"><?php esc_html_e( 'Hide Login Errors', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'Generic message instead of revealing whether a username exists.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_restrict_uploads', $options['hikmah_restrict_uploads'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_restrict_uploads"><?php esc_html_e( 'Restrict Uploads', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'Whitelist allowed MIME types and hard-block PHP uploads.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+                <div class="hikmah-field hikmah-field--stacked">
+                    <label class="hikmah-field__label" for="hikmah_allowed_upload_mimes"><?php esc_html_e( 'Allowed MIME Extensions', 'hikmah-login' ); ?></label>
+                    <span class="hikmah-field__control" style="width:100%;max-width:640px;">
+                        <input type="text" id="hikmah_allowed_upload_mimes" name="hikmah_allowed_upload_mimes" class="large-text code" style="width:100%;" value="<?php echo esc_attr( $options['hikmah_allowed_upload_mimes'] ); ?>">
+                    </span>
+                </div>
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_disable_application_passwords', $options['hikmah_disable_application_passwords'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_disable_application_passwords"><?php esc_html_e( 'Disable Application Passwords', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'Reduces credential abuse risk on sites that do not use the REST API.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+            </div>
         </div>
 
         <!-- Audit Log -->
-        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px 24px;margin:20px 0;">
-            <h2 style="margin:0 0 4px;">📋 <?php esc_html_e( 'Audit Log', 'hikmah-login' ); ?></h2>
-            <p class="description" style="margin:0 0 16px;"><?php esc_html_e( 'Record logins, failures, lockouts and security events for monitoring.', 'hikmah-login' ); ?></p>
-
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><label for="hikmah_login_logging_enabled"><?php esc_html_e( 'Enable Audit Log', 'hikmah-login' ); ?></label></th>
-                    <td>
-                        <?php echo __hikmah_checkbox( 'hikmah_login_logging_enabled', $options['hikmah_login_logging_enabled'] ); // phpcs:ignore ?>
-                        <span class="description"><?php esc_html_e( 'View events on the Security Dashboard. Enabled by default.', 'hikmah-login' ); ?></span>
-                    </td>
-                </tr>
-            </table>
+        <div class="hikmah-card">
+            <div class="hikmah-card__head">
+                <div>
+                    <h2 class="hikmah-card__title"><span class="hikmah-icon-chip hikmah-icon-chip--amber">📋</span> <?php esc_html_e( 'Audit Log', 'hikmah-login' ); ?></h2>
+                    <p class="hikmah-card__desc"><?php esc_html_e( 'Record logins, failures, lockouts and security events for monitoring.', 'hikmah-login' ); ?></p>
+                </div>
+            </div>
+            <div class="hikmah-card__body">
+                <div class="hikmah-field">
+                    <?php echo __hikmah_checkbox( 'hikmah_login_logging_enabled', $options['hikmah_login_logging_enabled'] ); // phpcs:ignore ?>
+                    <span class="hikmah-field__main">
+                        <label class="hikmah-field__label" for="hikmah_login_logging_enabled"><?php esc_html_e( 'Enable Audit Log', 'hikmah-login' ); ?></label>
+                        <span class="hikmah-field__desc"><?php esc_html_e( 'View events on the Security Dashboard. Enabled by default.', 'hikmah-login' ); ?></span>
+                    </span>
+                </div>
+            </div>
         </div>
 
-        <p class="submit">
-            <button type="submit" name="hikmah_security_settings_submit" class="button button-primary button-hero">
-                <?php esc_html_e( 'Save Security Settings', 'hikmah-login' ); ?>
-            </button>
-        </p>
+        <div class="hikmah-savebar">
+            <span class="hikmah-savebar__hint">💡 <?php esc_html_e( 'Changes apply immediately after saving.', 'hikmah-login' ); ?></span>
+            <div>
+                <button type="submit" name="hikmah_security_settings_submit" class="hikmah-btn hikmah-btn--primary">
+                    💾 <?php esc_html_e( 'Save Security Settings', 'hikmah-login' ); ?>
+                </button>
+            </div>
+        </div>
     </form>
 </div>

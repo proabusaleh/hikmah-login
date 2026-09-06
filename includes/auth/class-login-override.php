@@ -270,7 +270,15 @@ class Login_Override {
             $redirect = get_option( 'hikmah_login_logout_redirect_url', home_url( '/' ) );
         }
 
-        return wp_logout_url( $redirect );
+        // Temporarily remove this filter to avoid infinite recursion,
+        // since wp_logout_url() re-applies the 'logout_url' filter.
+        remove_filter( 'logout_url', [ $this, 'custom_logout_url' ], 10 );
+
+        $custom_url = wp_logout_url( $redirect );
+
+        add_filter( 'logout_url', [ $this, 'custom_logout_url' ], 10, 2 );
+
+        return $custom_url;
     }
 
     /**

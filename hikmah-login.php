@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name:       Hikmah Login
- * Plugin URI:        https://example.com/hikmah-login
+ * Plugin URI:        https://github.com/proabusaleh/hikmah-login
  * Description:       A complete WordPress login, registration, and authentication system with security, social login, 2FA, and more.
- * Version:           1.0.0
+ * Version:           2.0.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
- * Author:            Your Name
- * Author URI:        https://example.com
+ * Author:            Abu Saleh
+ * Author URI:        https://github.com/proabusaleh
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       hikmah-login
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 
 // Plugin Version
-define( 'HIKMAH_LOGIN_VERSION', '1.0.0' );
+define( 'HIKMAH_LOGIN_VERSION', '2.0.0' );
 
 // Plugin File Path (this file)
 define( 'HIKMAH_LOGIN_FILE', __FILE__ );
